@@ -1,0 +1,142 @@
+\documentclass[a4paper, 12pt]{scrreprt}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[onehalfspacing]{setspace}
+
+\usepackage[
+backend=biber,
+sorting=none,
+citestyle=authoryear,
+natbib=true
+]{biblatex}
+\usepackage[ngerman]{babel}
+\usepackage{enumitem}
+
+\setlist[enumerate]{label*=\arabic*.}
+
+\addbibresource{references.bib}
+
+\hypersetup{
+	colorlinks,
+	linkcolor={red!0!black},
+	citecolor={blue!70!black},
+	urlcolor={blue!70!black}
+}
+
+\defbibfilter{bookInbook}{
+	type=book or
+	type=inbook
+}
+
+\newcommand\klammercite[1]{%
+	(\citealt{#1})}
+
+\title{Platzhalter Titel}
+\subtitle{}
+\author{Lennart Ploog}
+\publishers{IS Medieninformatik\\ Fakultät 4\\ Hochschule Bremen}
+
+\makeatletter
+\let\inserttitle\@title
+\makeatother
+
+\begin{document}
+	\maketitle
+	\newpage
+	\tableofcontents
+	\newpage
+\chapter{Abstract}
+TODO: Acronyms, Figures
+\chapter{Einleitung}
+\section{Problemfeld}
+Ob auf Reisen, im Supermarkt oder im Fahrstuhl - Situationen in denen mobile Endgeräte keine stabile Internetverbindung haben, kommen im Alltag häufiger vor als gewünscht. In vielen Entwicklungsländern und auch in ländlichen Gegenden entwickelter Industriestaaten fehlt dafür gar die komplette Infrastruktur. Im Laufe der letzten Jahre eröffneten Innovationen im Bereich der Browser-Technologien, allen voran der Service-Worker, neue Möglichkeiten für die Webentwicklung. Als Offline-First-Applikationen werden Webanwendungen bezeichnet, die ihre Funktionalität so weit es geht behalten, wenn die Verbindung zum Internet getrennt ist.\\
+
+Eine der Kernherausvorderungen der Entwicklung von Offline-First Applikationen ist die Synchronisation von Daten. Werden offline Änderungen vorgenommen, sollen diese nicht verloren gehen. Hat sich der Zustand der Applikation, beispielsweise durch Modifikationen eines anderen Nutzers, in der Zwischenzeit jedoch geändert, müssen beide Änderungen zusammengebracht, also synchronisiert werden. Der Prozess der Synchronisation ist oft aufwendig, denn zum Einen muss ermittelt werden, wo sich beide Replikationen unterscheiden und zum Anderen muss vermieden werden, dass die Änderungen sich in die Quere kommen.\\ 
+
+Gängige Lösungen zu einer solchen Zusammenführung von Daten Umfassen die Nutzung bestimmter Datenbanken-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CloudDB oder auch Backend-as-a-Service Produkte wie Firebase oder IBM Cloudant, welche ebenfalls eine solche Funktionalität anbieten. Um dies zu vermeiden, Verzichten viele Applikationen bei Konflikten auf eine Synchronisation und einer der beiden Nutzer verliert seine vollbrachte Arbeit.
+
+\section{Ziel der Arbeit} 
+
+Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von konfliktfreien replizierten Datentypen, kurz CRDTs, umzusetzen. Der Einsatz von CRDTs ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf CRDTs aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.\\
+
+So ergeben sich folgende Forschungsfragen:
+
+\begin{itemize}
+	\item Wie können CRDTs in Offline-First Applikationen verwendet werden?
+	\item Welche CRDTs bieten sich zur Umsetzung von Offline-First Applikationen an und wie werden diese in die Datenbanken (Client und Server) implementiert?
+	\item Welche Vor- und Nachteile bietet die Nutzung von CRDTs im Vergleich zu anderen Optionen zur Synchronisierung von Daten in Offline-First Applikationen.
+\end{itemize}
+
+\section{Vorgehen}
+
+Es gibt verschiedene Möglichkeiten, wie CRDTs in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur beginnen kann, muss ermittelt werden, welche CRDTs sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden eignet sich die Recherche in den im Abschnitt Verwandte Arbeiten erwähnten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch in Erfahrung zu bringen, welche CRDTs bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren zu P2P Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind CRDTs schon weiter verbreitet als in anderen Anwendungsgebieten.\\
+
+Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte auch der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, an welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
+
+\subsection{Prototyp}
+Platzhalter, genauer nach Fertigstellung des Prototypen
+Als Prototyp wird ein Online-Kochbuch mit folgenden Funktionen umgesetzt:
+\begin{itemize}
+	\item Anlegen, Bearbeiten und Löschen von Rezepten mit Namen, Zutaten und Beschreibung
+	\item Zugriff auf die Gleichen Rezepte von verschiedenen Clients
+	\item \enquote{Liken} der Rezepte
+\end{itemize}
+
+\chapter{Verwandte Arbeiten}
+Entstanden in der Forschung an Datenstrukturen für kollaboratives Editieren formulieren \citet{InproceedingsCRDTOriginal} die theoretischen Grundlagen von CRDTs um Strong Eventual Consistency, kurz SEC, in großen verteilten Systemen zu garantieren. SEC erweitert den bis dahin verbreiteten Ansatz der Eventual Consistency, kurz EC. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
+
+Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine library CRDT konformer JSON Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
+
+Mit Woot\klammercite{InproceedingsCRDTWoot}, Logoot\klammercite{InproceedingsCRDTLogoot}, LSEQ\klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden.\\ 
+
+Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten der Nutzung von CRDTs in für Offlinefunktionalität empfehlen, und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt.\\
+
+Ziel dieser Arbeit ist es deshalb, die Umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen, und zu ermitteln, welche eigenen Herausforderungen diese Umgebung aufweist.
+\chapter{Grundlagen}
+\section{Definition: Offline-First}
+Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen.
+
+
+
+\section{Service Worker}
+
+Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripts, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroblerfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
+
+In traditionellen Webanwendungen werden alle benötigten Dateine, Markups, Skripte und Assets über HTTP-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation HTTPS nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
+
+\section{Caching Strategien}
+
+Es folgen einige grundlegende Caching-Strategien, mit Beispielen, für welche Art Requests sie sich eignen könnten.
+
+\subsubsection{Netzwerk dann Cache}
+Die Abbildung ABBILDUNG beschreibt einen Request den der Service Worker erst über das Netzwerk delegiert. Falls die Kommunikation mit dem Netzwerk unterbrochen ist, beispielsweise wenn der Nutzer offline ist, leitet der Service Worker den Request an den Cache weiter. Diese Methode eignet sich für Requests bei denen aktuelle Daten bevorzugt sind, dem Nutzer aber eine ältere Version zur Verfügung gestellt werden soll, wenn die Internetverbindung unterbrochen ist.
+
+\subsubsection{Cache dann Netzwerk}
+In ABBILDUNG wird der Request zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als HTTP-Request and den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
+
+\subsubsection{Nur Netzwerk}
+Für Aufgaben die nur Online zu erfüllen sind, eignet sich die in Abbildung ABBILDUNG bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so Konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Nutzer wieder online ist.
+
+\subsubsection{Nur Cache:}
+Abbildung ABBILDUNG zeigt wie die angefragte Resource nur im Cache abgefragt wird. Diese Strategie ist nur dann Sinnvoll, wenn die betroffenen Daten in einem vorherigen Schritt, beispielsweise beim Installieren des Service Workers, mit gecached wurden.
+
+\newpage
+\printbibliography
+\section{Offline First Applikationen als verteiltes System}
+\autocite{ArticleDistributedSystems} charakterisieren verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.}
+\section{Synchronisation in Offline First Applikationen}
+\section{CRDTs}
+\subsection{Register}
+\subsection{Counter}
+\subsection{Grow-Only Set}
+\section{Hybrid-Logical Clocks}
+
+\end{document}]
+
+
