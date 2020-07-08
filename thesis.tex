@@ -17,22 +17,19 @@ natbib=true
 ]{biblatex}
 \usepackage[ngerman]{babel}
 \usepackage{enumitem}
-
 \setlist[enumerate]{label*=\arabic*.}
-
 \addbibresource{references.bib}
-
 \hypersetup{
 	colorlinks,
 	linkcolor={red!0!black},
 	citecolor={blue!70!black},
 	urlcolor={blue!70!black}
 }
-
 \defbibfilter{bookInbook}{
 	type=book or
 	type=inbook
 }
+\graphicspath{ {./img/} }
 
 \newcommand\klammercite[1]{%
 	(\citealt{#1})}
@@ -106,36 +103,70 @@ Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den
 
 \section{Service Worker}
 
-Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripts, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroblerfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
+Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripts, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroberfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
 
-In traditionellen Webanwendungen werden alle benötigten Dateine, Markups, Skripte und Assets über HTTP-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation HTTPS nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
+In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über HTTP-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation HTTPS nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
 
-\section{Caching Strategien}
+\section{Caching}
 
 Es folgen einige grundlegende Caching-Strategien, mit Beispielen, für welche Art Requests sie sich eignen könnten.
 
 \subsubsection{Netzwerk dann Cache}
-Die Abbildung ABBILDUNG beschreibt einen Request den der Service Worker erst über das Netzwerk delegiert. Falls die Kommunikation mit dem Netzwerk unterbrochen ist, beispielsweise wenn der Nutzer offline ist, leitet der Service Worker den Request an den Cache weiter. Diese Methode eignet sich für Requests bei denen aktuelle Daten bevorzugt sind, dem Nutzer aber eine ältere Version zur Verfügung gestellt werden soll, wenn die Internetverbindung unterbrochen ist.
+Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request den der Service Worker erst über das Netzwerk delegiert. Falls die Kommunikation mit dem Internet unterbrochen ist, beispielsweise wenn der Nutzer offline ist, leitet der Service Worker den Request an den Cache weiter. Diese Methode eignet sich für Requests bei denen aktuelle Daten bevorzugt sind, dem Nutzer aber eine ältere Version zur Verfügung gestellt werden soll, wenn die Internetverbindung unterbrochen ist.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.75\textwidth]{networkfirst.png}
+	\caption{Netzwerk dann Cache}
+	\label{fig:cachingNetworkFirst}
+\end{figure}
+
+
 
 \subsubsection{Cache dann Netzwerk}
-In ABBILDUNG wird der Request zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als HTTP-Request and den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
+Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als HTTP-Request and den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.75\textwidth]{cachefirst.png}
+	\caption{Caching Strategie: Cache dann Netzwerk}
+	\label{fig:cachingCacheFirst}
+\end{figure}
 
 \subsubsection{Nur Netzwerk}
-Für Aufgaben die nur Online zu erfüllen sind, eignet sich die in Abbildung ABBILDUNG bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so Konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Nutzer wieder online ist.
+Für Aufgaben die nur Online zu erfüllen sind, eignet sich die in Abbildung \ref{fig:cachingNetworkOnly} bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so Konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Nutzer wieder online ist.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.75\textwidth]{networkonly.png}
+	\caption{Nur Netzwerk}
+	\label{fig:cachingNetworkOnly}
+\end{figure}
 
 \subsubsection{Nur Cache:}
-Abbildung ABBILDUNG zeigt wie die angefragte Resource nur im Cache abgefragt wird. Diese Strategie ist nur dann Sinnvoll, wenn die betroffenen Daten in einem vorherigen Schritt, beispielsweise beim Installieren des Service Workers, mit gecached wurden.
+Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im Cache abgefragt wird. Diese Strategie ist nur dann Sinnvoll, wenn die betroffenen Daten in einem vorherigen Schritt, beispielsweise beim Installieren des Service Workers, mit gecached wurden.
 
-\newpage
-\printbibliography
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.75\textwidth]{cacheonly.png}
+	\caption{Nur Cache}
+	\label{fig:cachingCacheOnly}
+\end{figure}
+
 \section{Offline First Applikationen als verteiltes System}
 \autocite{ArticleDistributedSystems} charakterisieren verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.}
+
 \section{Synchronisation in Offline First Applikationen}
 \section{CRDTs}
 \subsection{Register}
 \subsection{Counter}
 \subsection{Grow-Only Set}
 \section{Hybrid-Logical Clocks}
+
+\newpage
+\printbibliography
+
+
 
 \end{document}]
 
