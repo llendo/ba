@@ -9,7 +9,7 @@
 \usepackage{xcolor}
 \usepackage{caption}
 \usepackage[onehalfspacing]{setspace}
-
+\usepackage{chngcntr}
 \usepackage[
 backend=biber,
 sorting=none,
@@ -18,13 +18,15 @@ natbib=true
 ]{biblatex}
 \usepackage[ngerman]{babel}
 \usepackage{enumitem}
+
+
 \setlist[enumerate]{label*=\arabic*.}
 \addbibresource{references.bib}
 \hypersetup{
 	colorlinks,
-	linkcolor={red!0!black},
-	citecolor={blue!70!black},
-	urlcolor={blue!70!black}
+	linkcolor={black},
+	citecolor={black},
+	urlcolor={black}
 }
 \defbibfilter{bookInbook}{
 	type=book or
@@ -32,8 +34,13 @@ natbib=true
 }
 \graphicspath{ {./img/} }
 
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+
 \newcommand\klammercite[1]{%
 	(\citealt{#1})}
+
+\parskip 1.75ex plus 0.5ex minus 0.5ex
 
 \title{Platzhalter Titel}
 \subtitle{}
@@ -53,15 +60,15 @@ natbib=true
 TODO: Acronyms, Figures
 \chapter{Einleitung}
 \section{Problemfeld}
-Ob auf Reisen, im Supermarkt oder im Fahrstuhl - Situationen in denen mobile Endgeräte keine stabile Internetverbindung haben, kommen im Alltag häufiger vor als gewünscht. In vielen Entwicklungsländern und auch in ländlichen Gegenden entwickelter Industriestaaten fehlt dafür gar die komplette Infrastruktur. Im Laufe der letzten Jahre eröffneten Innovationen im Bereich der Browser-Technologien, allen voran der Service-Worker, neue Möglichkeiten für die Webentwicklung. Als Offline-First-Applikationen werden Webanwendungen bezeichnet, die ihre Funktionalität so weit es geht behalten, wenn die Verbindung zum Internet getrennt ist.\\
+Ob auf Reisen, im Supermarkt oder im Fahrstuhl -- Situationen, in denen mobile Endgeräte keine stabile Internetverbindung haben, kommen im Alltag häufiger vor als gewünscht. In vielen Entwicklungsländern und auch in ländlichen Gegenden entwickelter Industriestaaten fehlt dafür gar die komplette Infrastruktur. Im Laufe der letzten Jahre eröffneten Innovationen im Bereich der Browser-Technologien, allen voran der Service-Worker, neue Möglichkeiten für die Webentwicklung. Als Offline-First-Applikationen werden Webanwendungen bezeichnet, die ihre Funktionalität so weit es geht behalten, wenn die Verbindung zum Internet getrennt ist.
 
-Eine der Kernherausvorderungen der Entwicklung von Offline-First Applikationen ist die Synchronisation von Daten. Werden offline Änderungen vorgenommen, sollen diese nicht verloren gehen. Hat sich der Zustand der Applikation, beispielsweise durch Modifikationen eines anderen Nutzers, in der Zwischenzeit jedoch geändert, müssen beide Änderungen zusammengebracht, also synchronisiert werden. Der Prozess der Synchronisation ist oft aufwendig, denn zum Einen muss ermittelt werden, wo sich beide Replikationen unterscheiden und zum Anderen muss vermieden werden, dass die Änderungen sich in die Quere kommen.\\ 
+Eine der Kernherausforderungen der Entwicklung von Offline-First Applikationen ist die Synchronisation von Daten. Werden offline Änderungen vorgenommen, sollen diese nicht verloren gehen. Hat sich der Zustand der Applikation, beispielsweise durch Modifikationen eines anderen Nutzers, in der Zwischenzeit jedoch geändert, müssen beide Änderungen zusammengebracht, also synchronisiert werden. Der Prozess der Synchronisation ist oft aufwendig, denn zum Einen muss ermittelt werden, wo sich beide Replikationen unterscheiden und zum Anderen muss vermieden werden, dass die Änderungen sich in die Quere kommen. 
 
-Gängige Lösungen zu einer solchen Zusammenführung von Daten Umfassen die Nutzung bestimmter Datenbanken-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CloudDB oder auch Backend-as-a-Service Produkte wie Firebase oder IBM Cloudant, welche ebenfalls eine solche Funktionalität anbieten. Um dies zu vermeiden, Verzichten viele Applikationen bei Konflikten auf eine Synchronisation und einer der beiden Nutzer verliert seine vollbrachte Arbeit.
+Gängige Lösungen zu einer solchen Zusammenführung von Daten umfassen die Nutzung bestimmter Datenbanken-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CloudDB oder auch Backend-as-a-Service Produkte wie Firebase oder IBM Cloudant, welche ebenfalls eine solche Funktionalität anbieten. Um dies zu vermeiden, verzichten viele Applikationen bei Konflikten auf eine Synchronisation und einer der beiden Nutzer verliert seine vollbrachte Arbeit.
 
 \section{Ziel der Arbeit} 
 
-Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von konfliktfreien replizierten Datentypen, kurz CRDTs, umzusetzen. Der Einsatz von CRDTs ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf CRDTs aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.\\
+Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von konfliktfreien replizierten Datentypen, kurz CRDTs, umzusetzen. Der Einsatz von CRDTs ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf CRDTs aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
 
 So ergeben sich folgende Forschungsfragen:
 
@@ -73,7 +80,7 @@ So ergeben sich folgende Forschungsfragen:
 
 \section{Vorgehen}
 
-Es gibt verschiedene Möglichkeiten, wie CRDTs in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur beginnen kann, muss ermittelt werden, welche CRDTs sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden eignet sich die Recherche in den im Abschnitt Verwandte Arbeiten erwähnten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch in Erfahrung zu bringen, welche CRDTs bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren zu P2P Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind CRDTs schon weiter verbreitet als in anderen Anwendungsgebieten.\\
+Es gibt verschiedene Möglichkeiten, wie CRDTs in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur beginnen kann, muss ermittelt werden, welche CRDTs sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden eignet sich die Recherche in den im Abschnitt Verwandte Arbeiten erwähnten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch in Erfahrung zu bringen, welche CRDTs bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren zu P2P Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind CRDTs schon weiter verbreitet als in anderen Anwendungsgebieten.
 
 Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte auch der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, an welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
 
@@ -87,13 +94,13 @@ Als Prototyp wird ein Online-Kochbuch mit folgenden Funktionen umgesetzt:
 \end{itemize}
 
 \chapter{Verwandte Arbeiten}
-Entstanden in der Forschung an Datenstrukturen für kollaboratives Editieren formulieren \citet{InproceedingsCRDTOriginal} die theoretischen Grundlagen von CRDTs um Strong Eventual Consistency, kurz SEC, in großen verteilten Systemen zu garantieren. SEC erweitert den bis dahin verbreiteten Ansatz der Eventual Consistency, kurz EC. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
+CRDTs sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von CRDTs, um Strong Eventual Consistency, kurz SEC, in großen verteilten Systemen zu garantieren. SEC erweitert den bis dahin verbreiteten Ansatz der Eventual Consistency, kurz EC. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
 
 Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine library CRDT konformer JSON Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
 
-Mit Woot\klammercite{InproceedingsCRDTWoot}, Logoot\klammercite{InproceedingsCRDTLogoot}, LSEQ\klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden.\\ 
+Mit Woot\klammercite{InproceedingsCRDTWoot}, Logoot\klammercite{InproceedingsCRDTLogoot}, LSEQ\klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
-Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten der Nutzung von CRDTs in für Offlinefunktionalität empfehlen, und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt.\\
+Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten der Nutzung von CRDTs in für Offlinefunktionalität empfehlen, und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt.
 
 Ziel dieser Arbeit ist es deshalb, die Umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen, und zu ermitteln, welche eigenen Herausforderungen diese Umgebung aufweist.
 \chapter{Grundlagen}
@@ -155,19 +162,41 @@ Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im 
 \end{figure}
 
 \section{Offline First Applikationen als verteiltes System}
-\autocite{ArticleDistributedSystems} charakterisieren verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.} Weitere erwähnte Charakteristikam verteilter Systeme lassen sich wie Folgt zusammenfassen:
-https://medium.com/system-design-blog/key-characteristics-of-distributed-systems-781c4d92cce3
-file:///home/lenni/Downloads/Distributed%20systems%20principles%20and%20paradigms%202nd%20edition.pdf
-\begin{figure}
+\citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.} Tabelle \ref{tab:charakteristikaDistributedSystem} fasst weitere Charakteristika von verteilten Systemen zusammen.
+
+\begin{table}[H]
+	\caption{Charakteristika von verteilten Systemen, zusammengefasst nach \citet{BookDistributedSystemsDefinition}}
 	\begin{description}
-		\itemPunkt[]	
+		\item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System Verbunden. Diese können sich sowohl in der Hardware, also auch in der Funktionsweise unterscheiden. 
+		\item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
+		\item[Konsistente und Einheitliche Interaktion]
+		Eine Konsequenz aus dem singulären Erscheinen bedeutet, dass die Interaktion des Nutzers mit dem System ist immer gleich sein sollte, unabhängig davon mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
+		\item[Kontinuieliche Verfügbarkeit]
+		Das System soll dem Nutzer kontinuierlich zur Verfügung stehen, auch wenn einzelne Teile des Systems vorübergehend ausgefallen nicht erreichbar sind.
 	\end{description}
-	\caption*{test}
-\end{figure}
+	\label{tab:charakteristikaDistributedSystem}
+\end{table}
 
+Tabelle \ref{tab:charakteristikaOfflineFirst} erklärt, wie funktionsfähige Offline-First Applikationen die gleichen Charakteristika aufweisen.
 
-\section{Synchronisation in Offline First Applikationen}
+\begin{table}[H]
+	\caption{Charakteristika von Offline-First Applikationen}
+	\begin{description}
+		\item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb diese auch untereinander über unterschiedlichste Hardware verfügen können.
+		\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität. Offline interagiert der Nutzer nur mit seinem Endgerät, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für den Nutzer jedoch nicht von belangen. 
+		\item[Konsistente und Einheitliche Interaktion]
+		Unabhängig davon, welches Endgerät der Nutzer verwendet, sollen ihm früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Der Nutzer muss sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
+		
+		\item[Kontinuierliche Verfügbarkeit]
+		Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Der Nutzer kann seine Arbeit auch fortführen wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
+	\end{description}
+	\label{tab:charakteristikaOfflineFirst}
+\end{table}
+
+Daraus schließt sich, dass es sich bei Offline-First Webanwendungen um ein verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in \ref{Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (Siehe \ref{Verwandte Arbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von CRDTs zur Synchronisierung von Daten. 
+
 \section{CRDTs}
+CRDTs sind Datentypen, welche in Systemen eingesetzt werden können welche dem Modell der Strong Eventual Consistency folgen. Sie werden speziell so modelliert, dass das Zusammenfuhren der Daten kommutativ, assoziativ und idempotent Erfolgen kann.
 \subsection{Register}
 \subsection{Counter}
 \subsection{Grow-Only Set}
