@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{caption}
+\usepackage{parskip}
 \usepackage[onehalfspacing]{setspace}
 \usepackage{chngcntr}
 \usepackage[
@@ -161,42 +162,50 @@ Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im 
 	\label{fig:cachingCacheOnly}
 \end{figure}
 
-\section{Offline First Applikationen als verteiltes System}
-\citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.} Tabelle \ref{tab:charakteristikaDistributedSystem} fasst weitere Charakteristika von verteilten Systemen zusammen.
+\section{Offline First Applikationen als verteilte Systeme}
+\citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzern als ein einziges kohärentes System erscheint.}
 
-\begin{table}[H]
-	\caption{Charakteristika von verteilten Systemen, zusammengefasst nach \citet{BookDistributedSystemsDefinition}}
-	\begin{description}
-		\item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System Verbunden. Diese können sich sowohl in der Hardware, also auch in der Funktionsweise unterscheiden. 
-		\item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
-		\item[Konsistente und Einheitliche Interaktion]
-		Eine Konsequenz aus dem singulären Erscheinen bedeutet, dass die Interaktion des Nutzers mit dem System ist immer gleich sein sollte, unabhängig davon mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
-		\item[Kontinuieliche Verfügbarkeit]
-		Das System soll dem Nutzer kontinuierlich zur Verfügung stehen, auch wenn einzelne Teile des Systems vorübergehend ausgefallen nicht erreichbar sind.
-	\end{description}
+Die folgende Liste zeigt die Charakteristika von verteilten Systemen, zusammengefasst nach \citet{BookDistributedSystemsDefinition}.
+
+\begin{description}
+\item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System Verbunden. Diese können sich sowohl in der Hardware, also auch in der Funktionsweise unterscheiden. 
+\item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern 	im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
+\item[Konsistente und Einheitliche Interaktion]
+	Eine Konsequenz aus dem singulären Erscheinen bedeutet, dass die Interaktion des Nutzers mit dem System ist immer gleich sein sollte, unabhängig davon mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
+\item[Kontinuieliche Verfügbarkeit]
+	Das System soll dem Nutzer kontinuierlich zur Verfügung stehen, auch wenn einzelne Teile des Systems vorübergehend ausgefallen nicht erreichbar sind.
+\end{description}
 	\label{tab:charakteristikaDistributedSystem}
-\end{table}
 
-Tabelle \ref{tab:charakteristikaOfflineFirst} erklärt, wie funktionsfähige Offline-First Applikationen die gleichen Charakteristika aufweisen.
 
-\begin{table}[H]
-	\caption{Charakteristika von Offline-First Applikationen}
-	\begin{description}
-		\item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb diese auch untereinander über unterschiedlichste Hardware verfügen können.
-		\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität. Offline interagiert der Nutzer nur mit seinem Endgerät, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für den Nutzer jedoch nicht von belangen. 
-		\item[Konsistente und Einheitliche Interaktion]
-		Unabhängig davon, welches Endgerät der Nutzer verwendet, sollen ihm früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Der Nutzer muss sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
-		
-		\item[Kontinuierliche Verfügbarkeit]
-		Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Der Nutzer kann seine Arbeit auch fortführen wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
-	\end{description}
-	\label{tab:charakteristikaOfflineFirst}
-\end{table}
 
-Daraus schließt sich, dass es sich bei Offline-First Webanwendungen um ein verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in \ref{Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (Siehe \ref{Verwandte Arbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von CRDTs zur Synchronisierung von Daten. 
+@TODO satz einfügen Kleppnmann vortrag.
+Die folgende Liste erklärt, das funktionsfähige Offline-First Applikationen die gleichen Charakteristika aufzeigen und fasst zusammen, welche Rolle diese Merkmale in der Applikation spielen.
+
+\begin{description}		
+\item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb diese auch untereinander über unterschiedlichste Hardware verfügen können.
+\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität. Offline interagiert der Nutzer nur mit seinem Endgerät, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für den Nutzer jedoch nicht von belangen. \item[Konsistente und Einheitliche Interaktion]
+Unabhängig davon, welches Endgerät der Nutzer verwendet, sollen ihm früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Der Nutzer muss sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
+\item[Kontinuierliche Verfügbarkeit]
+Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Der Nutzer kann seine Arbeit auch fortführen wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
+\end{description}
+\label{tab:charakteristikaOfflineFirst}
+
+
+Daraus schließt sich, dass es sich bei Offline-First Webanwendungen um ein verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in \ref{Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (Siehe \ref{Verwandte Arbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von optimistischen Replikationsverfahren. 
+
+\subsection{Optimistische Replikation und Eventual Consistency}
+
+Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten. \autocite{BookDistributedSystemsConceptsAndDesign}. Datenreplikation beschreibt das Verwalten mehrerer Datenspeicher, genannt Replikationen. Diese Replikationen halten die gleichen Daten, befinden sich jedoch auf unterschiedlichen Computern\autocite{ArticleOptimisticReplication} In verteilten Systemen trägt diese Technik entscheidend dazu bei, sowohl kontinuierliche Verfügbarkeit, als auch konsistente Interaktion, beschrieben in \ref{tab:charakteristikaDistributedSystem}, zu garantieren. 
+
 
 \section{CRDTs}
+
+
+\subsection{Strong Eventual Consistency}
 CRDTs sind Datentypen, welche in Systemen eingesetzt werden können welche dem Modell der Strong Eventual Consistency folgen. Sie werden speziell so modelliert, dass das Zusammenfuhren der Daten kommutativ, assoziativ und idempotent Erfolgen kann.
+
+
 \subsection{Register}
 \subsection{Counter}
 \subsection{Grow-Only Set}
