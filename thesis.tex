@@ -11,6 +11,8 @@
 \usepackage{parskip}
 \usepackage[onehalfspacing]{setspace}
 \usepackage{chngcntr}
+\usepackage{acronym}
+\usepackage{fancyhdr}
 \usepackage[
 backend=biber,
 sorting=none,
@@ -43,6 +45,14 @@ natbib=true
 
 \parskip 1.75ex plus 0.5ex minus 0.5ex
 
+\pagestyle{fancy}
+\cfoot{\thepage}
+\lhead[\leftmark]{}
+\rhead[]{\leftmark}
+
+
+
+
 \title{Platzhalter Titel}
 \subtitle{}
 \author{Lennart Ploog}
@@ -57,6 +67,19 @@ natbib=true
 	\newpage
 	\tableofcontents
 	\newpage
+\section*{Abkürzungsverzeichnis}
+	\begin{acronym}[Bash]
+		\acro{CRDT}{Conflict-free replicated data type}
+		\acro{SC}{Strong Consistency}
+		\acro{SEC}{Strong Eventual Consistency}
+		\acro{EC}{Eventual Consistency}
+		\acro{CRTD}{Konfliktfeier Replizierter Datentyp}
+		\acro{P2P}{Peer To Peer}
+		\acro{HLC}{Hybrid Logical Clock}
+		\acro{JSON}{JavaScript Object Notation}
+		\acro{HTTP}{Hypertext Transfer Protocol}
+		\acro{HTTPS}{Hypertext Transfer Protocol Secure}
+	\end{acronym}
 \chapter{Abstract}
 TODO: Acronyms, Figures
 \chapter{Einleitung}\label{sec:Einleitung}
@@ -69,7 +92,7 @@ Gängige Lösungen zu einer solchen Zusammenführung von Daten umfassen die Nutz
 
 \section{Ziel der Arbeit} 
 
-Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von konfliktfreien replizierten Datentypen, kurz CRDTs, umzusetzen. Der Einsatz von CRDTs ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf CRDTs aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
+Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von konfliktfreien replizierten Datentypen (CRDTs), umzusetzen. Der Einsatz von CRDTs ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf CRDTs aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
 
 So ergeben sich folgende Forschungsfragen:
 
@@ -95,9 +118,9 @@ Als Prototyp wird ein Online-Kochbuch mit folgenden Funktionen umgesetzt:
 \end{itemize}
 
 \chapter{Verwandte Arbeiten}
-CRDTs sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von CRDTs, um Strong Eventual Consistency, kurz SEC, in großen verteilten Systemen zu garantieren. SEC erweitert den bis dahin verbreiteten Ansatz der Eventual Consistency, kurz EC. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
+CRDTs sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von CRDTs, um \ac{SEC} in großen verteilten Systemen zu garantieren. \ac{SEC} erweitert den bis dahin verbreiteten Ansatz der \ac{EC}. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
 
-Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine library CRDT konformer JSON Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
+Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine library CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
 
 Mit Woot\klammercite{InproceedingsCRDTWoot}, Logoot\klammercite{InproceedingsCRDTLogoot}, LSEQ\klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
@@ -114,7 +137,7 @@ Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den
 
 Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripts, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroberfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
 
-In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über HTTP-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation HTTPS nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
+In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über \ac{HTTP}-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
 
 \section{Caching}
 
@@ -133,7 +156,7 @@ Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request den der Service
 
 
 \subsubsection{Cache dann Netzwerk}
-Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als HTTP-Request and den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
+Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als \ac{HTTP}-Request and den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
 
 \begin{figure}[h]
 	\centering
@@ -169,7 +192,7 @@ Die folgende Liste zeigt die Charakteristika von verteilten Systemen, zusammenge
 
 \begin{description}
 \item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System verbunden. Diese können sich sowohl in der Hardware, also auch in der Funktionsweise unterscheiden. 
-\item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern 	im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
+\item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
 \item[Konsistente und Einheitliche Interaktion]
 	Eine Konsequenz aus dem singulären Erscheinen bedeutet, dass die Interaktion des Nutzers mit dem System immer gleich sein sollte, unabhängig davon mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
 \item[Kontinuierliche Verfügbarkeit]
@@ -191,7 +214,6 @@ Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität e
 \end{description}
 \label{tab:charakteristikaOfflineFirst}
 
-
 Daraus ergibt, dass es sich bei Offline-First Webanwendungen um verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in Abschnitt \ref{sec:Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (Siehe \ref{Verwandte Arbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von optimistischen Replikationsverfahren. 
 
 \section{Replikation}
@@ -200,29 +222,42 @@ Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten
 
 \subsection{Pessimistische Replikation: Strong Consistency}
 
-Traditionelle Strategien um diese Replikationen auf dem selben Stand zu halten folgen dem Modell der Strong Consistency. SC setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation Erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
+Traditionelle Strategien um die Replikationen auf dem selben Stand zu halten folgen dem Modell der \ac{SC}. \ac{SC} setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation Erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
 
-Es gibt ein weites Spektrum an Lösungen, um SC zu gewährleisten. Von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf Allen Replikationen speichern\autocite{ThesisUpdateEverywhere} über \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilt. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt eine Solche Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (Siehe Sektion \ref{sec:DefinitionOfflineFirst}) ist nicht mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu Garantieren, dass sie auf dem aktuellsten Stand ist.
+Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} über \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilt. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt eine Solche Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (Siehe Sektion \ref{sec:DefinitionOfflineFirst}) ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
 
 \subsection{Optimistische Replikation: Eventual Consistency}
 
-Die optimistische Replikation, auch \enquote{lazy replication} genannt, ist eine alternative Herangehensweise der Datenreplikation, welche es den Replikationen erlaubt, von einander Abzuweichen. Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nimmt der Nutzer eine Änderung vor, so wird diese auf seiner Replikation sofort Umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben und selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S.46]{ArticleOptimisticReplication}. Dieser Zustand wird Eventual Consistency genannt.
+Die optimistische Replikation, auch genannt \acf{EC}, ist ein alternatives Modell der Datenreplikation, welches es den Replikationen erlaubt, von einander abzuweichen.
 
 Die Implementierung von optimistischer Replikation bietet sich somit als Lösung für Systeme an, welche besonderen Wert auf kontinuierliche Verfügbarkeit legen, wie Offline-First Applikationen (siehe Sektion \ref{sec:OfflineFirstVerteiteSysteme}). 
 
-TODO: Nachteile Eventual Consistency:
-- Conflict Resolution
-- Garantiert nur, dass alle Updates ankommen. Dies kann zu Konflikten führen (Node A schreibt X=2, Node B schreibt X=3. Also ist erst A dann B = 3, erst B dann A = 2). Kann behoben werden durch Conflict Resolution, aber die ist stressig. 
-- Überleitung zu SEC. In SEC kommen alle Updates in der gleichen Reihenfolge, so kann komplexe Conflict Resolution umgangen Werden. 
+Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nimmt der Nutzer eine Änderung vor, so wird diese auf seiner Replikation sofort Umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben und selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S.46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen Herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
+
+Da die Computer im System parallel Änderungen vornehmen können, kann es Vorkommen, dass mehrere Replikationen das gleiche Datenobjekt modifizieren. Im Allgemeinen werden die Modifikationen zu unterschiedlichen Ergebnissen führen. Ist dies der Fall, spricht man von einem Konflikt. Das Ziel, Konvergenz zwischen den Replikationen zu erlangen, kann nur erreicht werden, wenn aus allen im Konflikt stehenden Änderungen eine einheitliche Lösung entsteht.
+
+Deshalb muss ein System, welches \ac{EC} implementiert, die Funktionalität aufweisen, Konflikte zu beheben. Problematisch dabei ist, dass die Replikationen nicht auf dem gleichen Stand sind bis der Konflikt vollständig behoben ist, selbst nachdem sie ihre Änderungen untereinander ausgetauscht haben. Der Prozess der Konfliktbehandlung kann voraussetzen auf die manuelle Konfliktlösung von Nutzern oder die Daten anderer Replikationen zu warten. \autocite{ArticleEventualConsistencyConflicts}
+
+Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herausforderung, wie in Abschnitt \ref{sec:Problemfeld} ausgeführt wird. Um diese Herausforderung zu bewältigen, bietet das Modell der \acf{SEC} einen Ansatz, die Flexibilität von \ac{EC} mit der Sicherheit von \ac{SC} zu erweitern. 
+
+
+
+%TODO: Nachteile Eventual Consistency:
+%- Conflict Resolution
+%- Garantiert nur, dass alle Updates ankommen. Dies kann zu Konflikten führen (Node A schreibt X=2, Node B schreibt X=3. Also ist erst A dann B = 3, erst B dann A = 2). Kann behoben werden durch Conflict Resolution, aber die ist stressig. 
+%- Überleitung zu SEC. In SEC kommen alle Updates in der gleichen Reihenfolge, so kann komplexe Conflict Resolution umgangen Werden. 
 
 \subsection{Strong Eventual Consistency}
 
+%TODO Auf dem gleichen Stand = Konvergent/Konvergenz austauschen
 
+\ac{SEC} beschreibt eine spezielle Form der \acf{EC}, welche das System von der Last der Konfliktbehandlung bereit. \ac{SEC} garantiert, dass zwei Replikationen nach dem Austauschen ihrer Änderungen immer konvergent sind. Im Gegensatz zur \ac{EC} wird die Konfliktbehandlung nicht vom System übernommen, stattdessen wird dieser Prozess durch die Nutzung spezieller Datentypen überfällig.
 
 \section{CRDTs}
 
-CRDTs sind Datentypen, die in Systemen eingesetzt werden können welche dem Modell der Strong Eventual Consistency folgen. Sie werden speziell so modelliert, dass das Zusammenführen der Daten kommutativ, assoziativ und idempotent erfolgen kann.
+CRDTs sind Datentypen, die in Systemen eingesetzt werden \ac{SEC} zu ermöglichen. Sie werden speziell so modelliert, dass das Zusammenführen der Daten kommutativ, assoziativ und idempotent erfolgen kann.
 
+@Kommutativ, Assoziativ, idempotent
 
 \subsection{Register}
 \subsection{Counter}
