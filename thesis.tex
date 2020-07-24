@@ -79,6 +79,7 @@ natbib=true
 		\acro{JSON}{JavaScript Object Notation}
 		\acro{HTTP}{Hypertext Transfer Protocol}
 		\acro{HTTPS}{Hypertext Transfer Protocol Secure}
+		\acro{LWW-Register}{Last-Writer-Wins Register}
 	\end{acronym}
 \chapter{Abstract}
 TODO: Acronyms, Figures
@@ -103,7 +104,6 @@ So ergeben sich folgende Forschungsfragen:
 \end{itemize}
 
 \section{Vorgehen}
-
 Es gibt verschiedene Möglichkeiten, wie CRDTs in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur beginnen kann, muss ermittelt werden, welche CRDTs sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden eignet sich die Recherche in den im Abschnitt Verwandte Arbeiten erwähnten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch in Erfahrung zu bringen, welche CRDTs bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren zu P2P Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind CRDTs schon weiter verbreitet als in anderen Anwendungsgebieten.
 
 Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte auch der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, an welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
@@ -134,7 +134,6 @@ Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den
 
 
 \section{Service Worker}
-
 Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripts, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroberfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
 
 In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über \ac{HTTP}-Requests an den Server geladen. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt Entscheiden welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
@@ -253,16 +252,57 @@ Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herau
 
 \ac{SEC} beschreibt eine spezielle Form der \acf{EC}, welche das System von der Last der Konfliktbehandlung bereit. \ac{SEC} garantiert, dass zwei Replikationen nach dem Austauschen ihrer Änderungen immer konvergent sind. Im Gegensatz zur \ac{EC} wird die Konfliktbehandlung nicht vom System übernommen, stattdessen wird dieser Prozess durch die Nutzung spezieller Datentypen überfällig.
 
+%TODO Abbildungen zu Consistencies
+%TODO Evtl Charakteristika beschreiben 
+
 \section{CRDTs}
 
-CRDTs sind Datentypen, die in Systemen eingesetzt werden \ac{SEC} zu ermöglichen. Sie werden speziell so modelliert, dass das Zusammenführen der Daten kommutativ, assoziativ und idempotent erfolgen kann.
+CRDTs sind Datentypen, die in verteilten Systemen eingesetzt werden um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Chars, Booleans und Datenstrukturen wie Sets und Maps. CRDTs erweitern diese Datentypen und Strukturen um einen Satz an Methoden und Werten und bilden somit ein CRDT-Objekt. Der Satz an CRDT-Funktionalitäten enthält immer eine merge Funktion, welche ausgeführt wird um den Status zweier Objekte zu synchronisieren.
+Weitere Werte, um welche CRDTs klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die merge Funktion möglich zu machen. Soll ein Objekt beispielsweise so gemerged werden, dass sich die neuste Änderung immer gegen ältere durchsetzt, muss zusätzlich zu dem klassischen Datentypen noch ein Zeitstempel der letzten Änderung verwaltet werden.
 
-@Kommutativ, Assoziativ, idempotent
+%todo: Abbildung CRDT mit Value, Merge, Zusatz
 
-\subsection{Register}
-\subsection{Counter}
+CRDTs werden speziell so modelliert, dass die merge-Funktion zweier CRDTs kommutativ, assoziativ und idempotent erfolgen kann.
+
+\begin{description}
+	\item[Kommutativ] Wenn zwei CRDTs zusammengeführt werden, ist das Ergebnis identisch, unabhängig davon, in welcher Reihenfolge dies geschieht (a merge b == b merge a)
+	\item[Assoziativ] Wenn drei CRDTs nacheinander zusammengeführt werden, ist das Ergebnis immer gleich, unabhängig davon welche zwei der Objekte zuerst mergen. (a merge (b merge c) == b merge (a merge c))
+	\item[Indempotent] Das einmalige mergen zweier CRDTs hat das gleiche Ergebnis wie ein beliebig oft widerholtes mergen der gleichen Objekte. (a merge b = ((((a merge b)merge b)merge b)merge b))
+\end{description}
+
+Diese Eigenschaften führen dazu, dass zwei Replikationen untereinander \ac{SC} schaffen, sobald sie den Stand ihrer Daten synchronisiert haben. Im Gegensatz zur \ac{EC} ist das System nicht mehr von einer im Konsens zu geschehenden Konfliktlösung abhängig. Dieser Vorteil und \ac{SEC} ist gleichzeitig ihr größte Nachteil der Nutzung von CRDTs in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (siehe \ref{sec:Verwandte Arbeiten}), dennoch bedarf die Verwendung von CRDTs und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich. 
+
+In der Literatur werden CRDTs in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung Erfolgt danach, das Zusammenführen der Objekte funktioniert.
+
+\begin{description}
+	\item[State-based]
+	Beim Synchronisieren von state-based CRDTs, wird der gesamte State der Objekte ausgetauscht.
+	Die merge Funktion ist anschließend in der Lage, beide Stati zu einem zu kombinieren. 
+	
+	\item[Operation-based]
+	Bei der Variante der operation-based CRDTs wird nicht der gesamte State der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der State eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Beim mergen zweier Objekte, werden diese Updates ausgetauscht und anschließend auf das jeweils andere Objekt angewandt. Da die Operationen kommutativ sein müssen,
+	%todo Siehe oben?
+	ist die Reihenfolge der Updates nicht relevant. 
+\end{description} 
+
+Beide Kategorien sind equivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet das ein state-based CRDT ein operation-based CRDT emulieren kann und vice versa.
+
+%todo hier ein paar beispiele oder so ka
+
+\subsection{LWW-Register}
+Ein Register ist ein Objekt welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT \autocite[S. ?]{InproceedingsCRDTOriginal}. 
+
+%TODO Counter auslassen weil ich ihn nicht benutze?
 \subsection{Grow-Only Set}
+Ein Set ist eine Datenstruktur, welche eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind nicht jedoch kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt daraufhin weiterhin im Set.
+
+Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen Operation. Das Entfernen des Objektes kann durch einen \enquote{Tombstone} Wert ersetzt werden. Ist dieser Wert positiv, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
+
+%todo WICHTIG - MERGE: STATE BASED UPDATE: OP BASED
+%todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
+
 \section{Hybrid-Logical Clocks}
+Move zu Umsetzung -> Keine direkte Verbindung zu CRDT und Offline First
 
 \newpage
 \printbibliography
