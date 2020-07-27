@@ -303,8 +303,42 @@ Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen Operati
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
 
 \section{Hybrid-Logical Clocks}
-Move zu Umsetzung -> Keine direkte Verbindung zu CRDT und Offline First
 
+\chapter{Konzeption}
+\section{Anforderungsanalyse}
+
+In diesem Kapitel werden die funktionalen und nicht funktionalen Anforderungen an den im Rahmen dieser Arbeit entwickelten Prototypen beschrieben.
+
+\subsection{Funktionale Anforderungen}
+Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darauf geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (siehe \ref{sec:Einleitung}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und CRDTs.
+
+Üblich in einer Anforderungsanalyse ist, die Anforderungen in \enquote{kann}, \enquote{soll} und \enquote{muss} Kategorien einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf \enquote{muss} Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essentiell für das System sind.
+
+\begin{description}
+	\item[{[]} Anlegen von Zutaten]
+	Der Nutzer soll in der Lage sein, Zutaten zu einem Rezept hinzuzufügen.
+	\item[{[]} Zugriff mit mehreren Endgeräten gleichzeitig]
+	Der Nutzer soll in der Lage sein, mit mehreren Geräten gleichzeitig auf das gleiche Rezept zuzugreifen.
+	\item[{[F01]} Offline-Erreichbarkeit]
+	Der Nutzer der Anwendung muss in der Lage sein, die Anwendung offline nutzen zu können
+	\item[{[F02]} Lokales Speichern]
+	Die Anwendung muss über die Funktionalität verfügen, Änderungen von Nutzern lokal zu speichern, wenn keine Verbindung zum Netzwerk besteht.
+	\item[{[F03]} Synchronisierung von Daten]
+	Änderungen des Nutzers müssen mit dem Server synchronisiert werden können, wenn die Verbindung zum Netzwerk wiederhergestellt ist. Der Nutzer sollte niemals seine Arbeit verlieren.
+	\item[{[]} Anlegen von Zutaten]
+	Der Nutzer soll in der Lage sein, Zutaten zu einem Rezept hinzuzufügen.
+	\item[{[]} Unabhängigkeit der Datenstruktur]
+	Die implementierte Datenstruktur muss unabhängig von der benutzten Datenbank sein. Keine der umgesetzten CRDT-Funktionalitäten darf von der gewählten Datenbank abhängig sein. 
+	\item[{[]} Abdeckung von Fehl]
+
+
+\end{description}
+
+
+
+\section{Software Architektur}
+\section{User Interface}
+\section{Schnittstellen}
 \newpage
 \printbibliography
 
