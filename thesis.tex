@@ -127,11 +127,12 @@ Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentw
 Mit Woot \klammercite{InproceedingsCRDTWoot}, Logoot \klammercite{InproceedingsCRDTLogoot}, LSEQ \klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
 Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von CRDTs für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt.
+%todo satz kürzen, Darüber hinaus
 
-Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen, und zu ermitteln, welche eigenen Herausforderungen diese Umgebung aufweist.
+Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen und zu ermitteln, welche besonderen Herausforderungen diese Umgebung aufweist.
 \chapter{Grundlagen}
 \section{Definition: Offline-First}\label{sec:DefinitionOfflineFirst}
-Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen.
+Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Dies gilt auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen.
 
 
 
@@ -167,7 +168,7 @@ Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an
 \end{figure}
 
 \subsubsection{\enquote{Nur Netzwerk}}
-Für Aufgaben, die nur Online zu erfüllen sind, eignet sich die in Abbildung \ref{fig:cachingNetworkOnly} bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Nutzer wieder online ist.
+Für Aufgaben, die nur online zu erfüllen sind, eignet sich die in Abbildung \ref{fig:cachingNetworkOnly} bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Nutzer wieder online ist.
 
 \begin{figure}[h]
 	\centering
@@ -192,10 +193,10 @@ Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im 
 Die folgende Liste zeigt die Charakteristika von verteilten Systemen, zusammengefasst nach \citet{BookDistributedSystemsDefinition}.
 
 \begin{description}
-\item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System verbunden. Diese können sich sowohl in der Hardware, als auch in der Funktionsweise unterscheiden. 
+\item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System verbunden. Diese können sich sowohl in der Hardware als auch in der Funktionsweise unterscheiden. 
 \item[Singuläres Erscheinungsbild] Für den Nutzer sind die Unterschiede zwischen den einzelnen Computern im System unersichtlich. Er nimmt die verteilten Computer als ein einzelnes System wahr. 
 \item[Konsistente und einheitliche Interaktion]
-	Eine Konsequenz aus dem singulären Erscheinen bedeutet, dass die Interaktion des Nutzers mit dem System immer gleich sein sollte, unabhängig davon, mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
+	Eine Konsequenz aus dem singulären Erscheinen ist, dass die Interaktion des Nutzers mit dem System immer gleich sein sollte, unabhängig davon, mit welcher Schnittstelle des Systems er tatsächlich interagiert. 
 \item[Kontinuierliche Verfügbarkeit]
 	Das System soll dem Nutzer kontinuierlich zur Verfügung stehen, auch wenn einzelne Teile des Systems vorübergehend ausgefallen oder nicht erreichbar sind.
 \end{description}
@@ -221,9 +222,9 @@ Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten
 
 \subsection{Pessimistische Replikation: Strong Consistency}
 
-Traditionelle Strategien, um die Replikationen auf dem selben Stand zu halten folgen dem Modell der \ac{SC}. \ac{SC} setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
+Traditionelle Strategien, um die Replikationen auf dem selben Stand zu halten, folgen dem Modell der \ac{SC}. \ac{SC} setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
 
-Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten.Diese reichen von {Update=-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (siehe \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
+Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (siehe \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
 
 \subsection{Optimistische Replikation: Eventual Consistency}
 
@@ -235,9 +236,9 @@ Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikatio
 
 Da die Computer im System parallel Änderungen vornehmen können, kann es vorkommen, dass mehrere Replikationen das gleiche Datenobjekt modifizieren. Im Allgemeinen werden die Modifikationen zu unterschiedlichen Ergebnissen führen. Ist dies der Fall, spricht man von einem Konflikt. Das Ziel, Konvergenz zwischen den Replikationen zu erlangen, kann nur erreicht werden, wenn aus allen im Konflikt stehenden Änderungen eine einheitliche Lösung entsteht.
 
-Deshalb muss ein System, welches \ac{EC} implementiert, die Funktionalität aufweisen, Konflikte zu beheben. Problematisch dabei ist, dass die Replikationen nicht auf dem gleichen Stand sind bis der Konflikt vollständig behoben ist, selbst nachdem sie ihre Änderungen untereinander ausgetauscht haben. Der Prozess der Konfliktbehandlung kann voraussetzen auf die manuelle Konfliktlösung von Nutzern oder die Daten anderer Replikationen zu warten. \autocite{ArticleEventualConsistencyConflicts}
+Deshalb muss ein System, welches \ac{EC} implementiert, die Funktionalität aufweisen, Konflikte zu beheben. Problematisch dabei ist, dass die Replikationen nicht auf dem gleichen Stand sind, bis der Konflikt vollständig behoben ist, selbst nachdem sie ihre Änderungen untereinander ausgetauscht haben. Der Prozess der Konfliktbehandlung kann voraussetzen, auf die manuelle Konfliktlösung von Nutzern oder die Daten anderer Replikationen zu warten \autocite{ArticleEventualConsistencyConflicts}.
 
-Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herausforderung, wie in Abschnitt \ref{sec:Problemfeld} ausgeführt wird. Um diese Herausforderung zu bewältigen, bietet das Modell der \acf{SEC} einen Ansatz, die Flexibilität von \ac{EC} mit der Sicherheit von \ac{SC} zu erweitern. 
+Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herausforderung, wie in Abschnitt \ref{sec:Problemfeld} ausgeführt wird. Um diese Herausforderung zu bewältigen, bietet das Modell der \acf{SEC} einen Ansatz, die Flexibilität von \ac{EC} um die Sicherheit von \ac{SC} zu erweitern. 
 
 
 
@@ -250,55 +251,56 @@ Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herau
 
 %TODO Auf dem gleichen Stand = Konvergent/Konvergenz austauschen
 
-\ac{SEC} beschreibt eine spezielle Form der \acf{EC}, welche das System von der Last der Konfliktbehandlung bereit. \ac{SEC} garantiert, dass zwei Replikationen nach dem Austauschen ihrer Änderungen immer konvergent sind. Im Gegensatz zur \ac{EC} wird die Konfliktbehandlung nicht vom System übernommen, stattdessen wird dieser Prozess durch die Nutzung spezieller Datentypen überfällig.
+\ac{SEC} beschreibt eine spezielle Form der \acf{EC}, welche das System von der Last der Konfliktbehandlung befreit. \ac{SEC} garantiert, dass zwei Replikationen nach dem Austauschen ihrer Änderungen immer konvergent sind. Im Gegensatz zur \ac{EC} wird die Konfliktbehandlung nicht vom System übernommen, stattdessen wird dieser Prozess durch die Nutzung spezieller Datentypen überflüssig. 
 
 %TODO Abbildungen zu Consistencies
 %TODO Evtl Charakteristika beschreiben 
 
 \section{CRDTs}
 
-CRDTs sind abstrakte Datentypen, die in verteilten Systemen eingesetzt werden um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Registern, Sets und Maps. CRDTs erweitern diese Datentypen um eine Schnittstelle, welche das Daten-Objekt neben den klassischen Operationen wie dem Auslesen des gespeicherten Wertes um Funktionalitäten erweitert um \ac{SEC} zu gewährleisten.\autocite[S.1 ]{ArticleCRDTOverview}
+CRDTs sind abstrakte Datentypen, die in verteilten Systemen eingesetzt werden, um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Registern, Sets und Maps. CRDTs erweitern diese Datentypen um eine Schnittstelle, welche das Daten-Objekt neben den klassischen Operationen wie dem Auslesen des gespeicherten Wertes um zusätzliche Funktionalitäten erweitert, um \ac{SEC} zu gewährleisten.\autocite[S.1 ]{ArticleCRDTOverview}
 
-Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum aktualisieren des Wertes des Objekts. Weitere Daten, um welche CRDTs klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neuste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (siehe \ref{sec:LWW REGISTER}).
+Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Wertes des Objekts. Weitere Daten, um welche CRDTs klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (siehe \ref{sec:LWW REGISTER}).
 %todo WERT = Besseres wort finden? Value?
 %todo: Abbildung CRDT mit Value, Merge, Zusatz
-Die Datentypen werden speziell so modelliert, dass das aktualisieren von CRDTs kommutativ, assoziativ und idempotent erfolgen kann \autocite{InproceedingsCrdtsInProduction}.
+Die Datentypen werden speziell so modelliert, dass das Aktualisieren von CRDTs kommutativ, assoziativ und idempotent erfolgen kann \autocite{InproceedingsCrdtsInProduction}.
 
 \begin{description}
-	\item[Kommutativ] Wenn zwei CRDTs Aktualisierungen austauschen, ist das Ergebnis identisch, unabhängig davon, in welcher Reihenfolge dies geschieht (a merge b == b merge a)
-	\item[Assoziativ] Wenn drei CRDTs nacheinander zusammengeführt werden, ist das Ergebnis immer gleich, unabhängig davon welche zwei der Objekte zuerst Aktualisierungen austauschen. (a merge (b merge c) == b merge (a merge c))
-	\item[Indempotent] Das einmalige zusammenführen zweier CRDTs hat das gleiche Ergebnis wie ein beliebig oftes Wiederholen des Vorgangs. (a merge b = ((((a merge b)merge b)merge b)merge b))
+	\item[Kommutativ] Wenn zwei CRDTs Aktualisierungen austauschen, ist das Ergebnis identisch, unabhängig davon, in welcher Reihenfolge dies geschieht.% (a merge b == b merge a)
+	\item[Assoziativ] Wenn drei CRDTs nacheinander zusammengeführt werden, ist das Ergebnis immer gleich, unabhängig davon, welche zwei der Objekte zuerst Aktualisierungen austauschen.% (a merge (b merge c) == b merge (a merge c))
+	\item[Idempotent] Das einmalige Zusammenführen zweier CRDTs hat das gleiche Ergebnis wie ein beliebig häufiges Wiederholen des Vorgangs.%(a merge b = ((((a merge b)merge b)merge b)merge b))
 \end{description}
 
-Diese Eigenschaften führen dazu, dass zwei Replikationen deterministisch im gleichen Zustand befinden müssen, sobald sie den Stand ihrer Daten synchronisiert haben. Im Gegensatz zur \ac{EC} ist das System nicht mehr von einer im Konsens zu geschehenden Konfliktlösung abhängig. 
+Diese Eigenschaften führen dazu, dass sich zwei Replikationen deterministisch im gleichen Zustand befinden müssen, sobald sie den Stand ihrer Daten synchronisiert haben. Im Gegensatz zur \ac{EC} ist das System nicht mehr von einer im Konsens zu geschehenden Konfliktlösung abhängig. 
 
-Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von CRDTs in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (siehe \ref{sec:Verwandte Arbeiten}), dennoch bedarf die Verwendung von CRDTs und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich. 
+Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von CRDTs in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (siehe \ref{sec:Verwandte Arbeiten}), dennoch bedarf die Verwendung von CRDTs und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich.
 
-In der Literatur werden CRDTs in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung Erfolgt danach, das Zusammenführen der Objekte funktioniert.
+In der Literatur werden CRDTs in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung erfolgt danach, wie das Zusammenführen der Objekte funktioniert.
 
 \begin{description}
 	\item[State-based]
-	Beim Synchronisieren von state-based CRDTs, wird der gesamte State der Objekte ausgetauscht.
-	Die merge Funktion ist anschließend in der Lage, beide Stati zu einem zu kombinieren. 
+	Beim Synchronisieren von state-based CRDTs wird der gesamte Zustand der Objekte ausgetauscht.
+	Die Merge-Funktion ist anschließend in der Lage, beide Zustände zu einem zu kombinieren. 
 	
 	\item[Operation-based]
-	Bei der Variante der operation-based CRDTs wird nicht der gesamte State der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der State eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Beim mergen zweier Objekte, werden diese Updates ausgetauscht und anschließend auf das jeweils andere Objekt angewandt. Da die Operationen kommutativ sein müssen,
+	Bei der Variante der operation-based CRDTs wird nicht der gesamte State der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der State eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Beim Mergen zweier Objekte werden diese Updates ausgetauscht und anschließend auf das jeweils andere Objekt angewandt. Da die Operationen kommutativ sein müssen,
 	%todo Siehe oben?
 	ist die Reihenfolge der Updates nicht relevant. 
 \end{description} 
 
-Beide Kategorien sind equivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet das ein state-based CRDT ein operation-based CRDT emulieren kann und vice versa.
+Beide Kategorien sind äquivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet, dass ein state-based CRDT ein operation-based CRDT emulieren kann und umgekehrt.
 
 %todo hier ein paar beispiele oder so ka
 
 \subsection{LWW-Register}
-Ein Register ist ein Objekt welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
+\sloppypar
+Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
 %TODO Counter auslassen weil ich ihn nicht benutze?
 \subsection{Grow-Only Set}
-Ein Set ist eine Datenstruktur, welche eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind nicht jedoch kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt daraufhin weiterhin im Set.
+Ein Set ist eine Datenstruktur, welche eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind jedoch nicht kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt weiterhin im Set.
 
-Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen Operation. Das Entfernen des Objektes kann durch einen \enquote{Tombstone} Wert ersetzt werden. Ist dieser Wert positiv, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
+Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen-Operation. Das Entfernen des Objektes kann durch eine \enquote{Tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
 
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
 
@@ -315,28 +317,46 @@ Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu en
 Üblich in einer Anforderungsanalyse ist, die Anforderungen in \enquote{kann}, \enquote{soll} und \enquote{muss} Kategorien einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf \enquote{muss} Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essentiell für das System sind.
 
 \begin{description}
-	\item[{[]} Anlegen von Zutaten]
+	\item[{[FA 1]} Anlegen von Zutaten]
 	Der Nutzer soll in der Lage sein, Zutaten zu einem Rezept hinzuzufügen.
-	\item[{[]} Zugriff mit mehreren Endgeräten gleichzeitig]
+	\item[{[FA 2]} Zugriff mit mehreren Endgeräten gleichzeitig]
 	Der Nutzer soll in der Lage sein, mit mehreren Geräten gleichzeitig auf das gleiche Rezept zuzugreifen.
-	\item[{[F01]} Offline-Erreichbarkeit]
-	Der Nutzer der Anwendung muss in der Lage sein, die Anwendung offline nutzen zu können
-	\item[{[F02]} Lokales Speichern]
+	\item[{[FA 3]} Offline-Erreichbarkeit]
+	Der Nutzer der Anwendung muss in der Lage sein, die Anwendung offline nutzen zu können.
+	\item[{[FA 4]} Lokales Speichern]
 	Die Anwendung muss über die Funktionalität verfügen, Änderungen von Nutzern lokal zu speichern, wenn keine Verbindung zum Netzwerk besteht.
-	\item[{[F03]} Synchronisierung von Daten]
+	\item[{[FA 5]} Synchronisierung von Daten]
 	Änderungen des Nutzers müssen mit dem Server synchronisiert werden können, wenn die Verbindung zum Netzwerk wiederhergestellt ist. Der Nutzer sollte niemals seine Arbeit verlieren.
-	\item[{[]} Anlegen von Zutaten]
-	Der Nutzer soll in der Lage sein, Zutaten zu einem Rezept hinzuzufügen.
-	\item[{[]} Unabhängigkeit der Datenstruktur]
-	Die implementierte Datenstruktur muss unabhängig von der benutzten Datenbank sein. Keine der umgesetzten CRDT-Funktionalitäten darf von der gewählten Datenbank abhängig sein. 
-	\item[{[]} Abdeckung von Fehl]
-
-
+	\item[{[FA 6]} Abdeckung von Fehlerfällen]
+	Die Datenstruktur muss so gestaltet sein, dass keine Fehler bei der Synchronisierung der Daten stattfinden können
 \end{description}
 
 
+\subsection{Nicht-funktionale Anforderungen}
+Während die funktionalen Anforderungen direkt Bezug auf die Funktionalität des Prototypen nehmen, werden zusätzlich sogenannte nicht-funktionale Anforderungen definiert, um die Rahmenbedingungen des Projekts einzuschränken. Diese beziehen sich nicht auf die konkreten Funktionen, sondern beschreiben stattdessen Ziele, welche die Umsetzung des Prototypen über die Funktionalität hinaus hat. 
 
-\section{Software Architektur}
+\begin{description}
+	\item[{[NFA 1]} Anschauliche Umsetzung: Code]
+	Ein Ziel der Arbeit ist, zu ermitteln, wie CRDTs in modernen Webanwendungen umgesetzt werden können (siehe \ref{sec:Problemfeld}). Da sich moderne Offline-First Anwendungen leider nicht in auf ein einziges Beispiel reduzieren lassen, ist bei der Umsetzung darauf zu achten die Datenstruktur so anschaulich und verständlich wie möglich zu implementieren. Dies bedeutet beispielsweise, Lesbarkeit über Effizienz beim schreiben von Programmcode zu priorisieren.
+	\item[{[NFA 2]} Anschauliche Umsetzung: Technologien]
+	Um das in NFA 1 formulierte Ziel der Anschaulichkeit weiter zu verfolgen, soll auch die Wahl der Technologien so erfolgen, dass diese soll die Ebene der Datenstruktur in Javascript umgesetzt werden. Auch wenn Entwicklern heutzutage zahlreiche Sprachen zur Verfügung stehen, welche zu Javascript kompilieren, bleibt Javascript aufgrund der hohen Verbreitung die für demonstrative Zwecke geeignetste Sprache.
+	\item[{[NFA 3]} Unabhängigkeit von Datenbank-Technologien]
+	Die implementierte Datenstruktur muss unabhängig von der benutzten Datenbank sein. Keine der umgesetzten CRDT-Funktionalitäten darf von der gewählten Datenbank abhängig sein.
+	
+\end{description}
+
+\section{Design und Planung}
+\begin{figure}
+	\begin{verbatim}
+	+-------------------+
+	|       Test        |
+	+-------------------+
+	\end{verbatim}
+	\caption{Box in an old RFC}
+	\label{fig:ascii-box}
+\end{figure}
+
+
 \section{User Interface}
 \section{Schnittstellen}
 \newpage
