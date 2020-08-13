@@ -2,17 +2,27 @@
 
 \usepackage[utf8]{inputenc}
 
+\usepackage[T1]{fontenc}
+\usepackage{listings}
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage{xcolor}
+\usepackage[pdftex]{xcolor}
+\usepackage{textcomp}
 \usepackage{caption}
 \usepackage{parskip}
 \usepackage[onehalfspacing]{setspace}
 \usepackage{chngcntr}
 \usepackage{acronym}
 \usepackage{fancyhdr}
+
+\usepackage{jslistings}
+
+
+\lstset{basicstyle=\footnotesize\ttfamily\small,breaklines=true}
+
+
 \usepackage[
 backend=biber,
 sorting=none,
@@ -131,12 +141,15 @@ Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretisc
 
 Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen und zu ermitteln, welche besonderen Herausforderungen diese Umgebung aufweist.
 \chapter{Grundlagen}
+Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte auf welchen Offline-First Applikationen und CRDTs aufbauen. 
 \section{Definition: Offline-First}\label{sec:DefinitionOfflineFirst}
 Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Dies gilt auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen.
 
 
 
 \section{Service Worker}
+\label{sec:serviceworker}
+
 Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripte, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroberfläche reagieren, im Hintergrund der Webanwendung laufen\autocite{OnlineHTTPWorker}.
 
 In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über \ac{HTTP}-Requests an den Server angefordert. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt entscheiden, welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Dies ist eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
@@ -226,6 +239,7 @@ Traditionelle Strategien, um die Replikationen auf dem selben Stand zu halten, f
 
 Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (siehe \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
 
+
 \subsection{Optimistische Replikation: Eventual Consistency}
 
 Die optimistische Replikation, auch genannt \acf{EC}, ist ein alternatives Modell der Datenreplikation, welches den Replikationen erlaubt, voneinander abzuweichen.
@@ -296,20 +310,26 @@ Beide Kategorien sind äquivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was
 \sloppypar
 Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
+
 %TODO Counter auslassen weil ich ihn nicht benutze?
 \subsection{Grow-Only Set}
-Ein Set ist eine Datenstruktur, welche eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind jedoch nicht kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt weiterhin im Set.
+Ein Set ist abstrakter Datentyp, welcher eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind jedoch nicht kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt weiterhin im Set.
 
 Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen-Operation. Das Entfernen des Objektes kann durch eine \enquote{Tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
 
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
 
-\section{Hybrid-Logical Clocks}
 
 \chapter{Konzeption}
+
+\section{Idee des Prototypen}
+Ziel der Arbeit ist es, einen Prototypen zu entwickeln welcher die Nutzung von CRDTs in Offline-First Webanwendungen demonstriert. Da die Datenstruktur hier im Mittelpunkt steht, liegt es nahe, als Prototyp eine Applikation zu entwickeln in der Nutzer auf verschiedenen Wegen mit Daten interagieren.
+
+Deshalb wird eine Applikation zum Verwalten von Rezepten entwickelt, welche es Nutzern ermöglicht, ein gemeinsames Rezeptebuch zu pflegen. Da Nutzer in der Lage sein sollen online, offline und zur gleichen Zeit Rezepte anlegen, speichern und bearbeiten zu können, ist dies ein geeignetes Szenario um die Nutzung von CRDTs zu begutachten. 
+
 \section{Anforderungsanalyse}
 
-In diesem Kapitel werden die funktionalen und nicht funktionalen Anforderungen an den im Rahmen dieser Arbeit entwickelten Prototypen beschrieben.
+In diesem Kapitel werden die funktionalen und nicht-funktionalen Anforderungen an den im Rahmen dieser Arbeit entwickelten Prototypen beschrieben.
 
 \subsection{Funktionale Anforderungen}
 Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darauf geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (siehe \ref{sec:Einleitung}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und CRDTs.
@@ -317,18 +337,24 @@ Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu en
 Üblich in einer Anforderungsanalyse ist, die Anforderungen in \enquote{kann}, \enquote{soll} und \enquote{muss} Kategorien einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf \enquote{muss} Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essentiell für das System sind.
 
 \begin{description}
+	\item[Anlegen von Rezepten]
+	Nutzer sollen Rezepte anlegen können. Ein Rezept hat einen Namen und eine Liste an Zutaten. 
 	\item[{[FA 1]} Anlegen von Zutaten]
-	Der Nutzer soll in der Lage sein, Zutaten zu einem Rezept hinzuzufügen.
+	Die Nutzer sollen in der Lage sein, Zutaten zu einem Rezept hinzuzufügen. Zutaten haben einen Namen und eine Mengenangabe, welche die Nutzer setzten können.
+	\item[Bearbeiten und Löschen]
+	Den Nutzern soll es möglich sein, Rezepte und Zutaten zu bearbeiten und zu löschen. 
 	\item[{[FA 2]} Zugriff mit mehreren Endgeräten gleichzeitig]
-	Der Nutzer soll in der Lage sein, mit mehreren Geräten gleichzeitig auf das gleiche Rezept zuzugreifen.
+	Nutzer sollen in der Lage sein, mit mehreren Geräten gleichzeitig auf die gleiche Applikation zuzugreifen.
 	\item[{[FA 3]} Offline-Erreichbarkeit]
-	Der Nutzer der Anwendung muss in der Lage sein, die Anwendung offline nutzen zu können.
+	Nutzer der Anwendung müssen in der Lage sein, die Anwendung offline zu nutzen. Der Funktionsumfang der Applikation soll dadurch nicht beeinflusst werden. 
 	\item[{[FA 4]} Lokales Speichern]
-	Die Anwendung muss über die Funktionalität verfügen, Änderungen von Nutzern lokal zu speichern, wenn keine Verbindung zum Netzwerk besteht.
+	Die Anwendung muss über die Funktionalität verfügen, Änderungen von Nutzern lokal zu speichern, damit diese auch zur Verfügung stehen wenn keine Verbindung zum Netzwerk besteht.
+	\item[Online Speichern]
+	Die Anwendungsdaten sollen nicht exklusiv lokal, sondern auch im Internet gespeichert werden können. Das Speichern der Daten erfolgt sinngemäß auf einem Server. 
 	\item[{[FA 5]} Synchronisierung von Daten]
-	Änderungen des Nutzers müssen mit dem Server synchronisiert werden können, wenn die Verbindung zum Netzwerk wiederhergestellt ist. Der Nutzer sollte niemals seine Arbeit verlieren.
-	\item[{[FA 6]} Abdeckung von Fehlerfällen]
-	Die Datenstruktur muss so gestaltet sein, dass keine Fehler bei der Synchronisierung der Daten stattfinden können
+	Änderungen des Nutzers müssen mit dem Server synchronisiert werden können, wenn eine Verbindung zum Internet besteht. Der Nutzer sollte niemals seine offline umgesetzten Änderungen verlieren.
+	\item[\ac{SEC}] Nachdem sich zwei Nutzer mit dem Stand des jeweils anderen Nutzers synchronisiert haben, müssen beide Applikationen den gleichen Stand haben.
+	\item[{[FA 6] Konfliktfreies Synchronisieren}] Das Synchronisieren der Daten soll ohne Konflikte erfolgen. 
 \end{description}
 
 
@@ -342,20 +368,78 @@ Während die funktionalen Anforderungen direkt Bezug auf die Funktionalität des
 	Um das in NFA 1 formulierte Ziel der Anschaulichkeit weiter zu verfolgen, soll auch die Wahl der Technologien so erfolgen, dass diese soll die Ebene der Datenstruktur in Javascript umgesetzt werden. Auch wenn Entwicklern heutzutage zahlreiche Sprachen zur Verfügung stehen, welche zu Javascript kompilieren, bleibt Javascript aufgrund der hohen Verbreitung die für demonstrative Zwecke geeignetste Sprache.
 	\item[{[NFA 3]} Unabhängigkeit von Datenbank-Technologien]
 	Die implementierte Datenstruktur muss unabhängig von der benutzten Datenbank sein. Keine der umgesetzten CRDT-Funktionalitäten darf von der gewählten Datenbank abhängig sein.
-	
 \end{description}
 
-\section{Design und Planung}
-\begin{figure}
-	\begin{verbatim}
-	+-------------------+
-	|       Test        |
-	+-------------------+
-	\end{verbatim}
-	\caption{Box in an old RFC}
-	\label{fig:ascii-box}
+\section{Architektur}
+\label{sec:Architektur}
+
+Da Daten sowohl online als auch offline gespeichert werden sollen, folgt die Umsetzung der Applikation dem für Webseiten üblichen Client-Server Modell. 
+
+Das der Prototyp als Offline-First Anwendung umgesetzt wird und umfangreiche Offlinefunktionalität zentraler Bestandteil der funktionalen Anforderungen sind, wirkt sich entscheidend auf die Architektur aus.
+
+Die Nutzung eines Service-Workers (siehe \ref{sec:serviceworker}) ermöglicht das zwischenspeichern der gesamten Client-seitigen Dateien, welche zum ausführen der Applikation benötigt werden. Da die Speicherung der Anwendungsdaten auch lokal erfolgen soll, ist die Anwendung nicht darauf angewiesen bei jeder Aktion des Nutzers Daten an den Server zu schicken.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.25\textwidth]{architektur.png}
+	\caption{\enquote{Architektur des Prototypen}}
+	\label{fig:architektur}
 \end{figure}
 
+Abbildung \ref{fig:architektur} zeigt die Architektur des Prototypen. Die Clientseite setzt sich zusammen aus Frontend, Geschäftslogik und der Browser-API IndexedDB als lokalen Speicher. Zusätzlich wird die JavaScript library \enquote(idb.js) für den Zugriff auf IndexedDB genutzt. Die CRDT Funktionalitäten befinden sich in dieser Darstellung in der Geschäftslogik. 
+
+Die Serverseite beginnt mit einer API, welche nur eine einzelne \enquote{/sync} Route zur Synchronisierung von lokalen- und online-Daten bereitstellt. Über diese Schnittstelle kann der Client seine Operationen an den Server schicken und erhält als Antwort die gesammelten Operationen des Servers. Das server-seitige Speichern der Applikationen erfolgt auf einer MongoDB Datenbank. Ergänzend zu MongoDB wird noch die library Mongoose genutzt. Als Laufzeitumgebung zum Betreiben des Webservers dient Node.js.
+
+\section{Technologien}
+
+Es folgt eine kompakte Vorstellung der zur Umsetzung des Prototypen genutzten Technologien. Auch wird erläutert, warum die einzelnen Technologien verwendet werden.
+
+\subsection{JavaScript, HTML und CSS}
+JavaScript ist eine Skriptsprache welche zur clientseitigen Programmierung von Websites genutzt wird. Mit einer Nutzung in über 95\% \autocite{OnlineJavascriptDistr} aller Websites ist sie aus dem Internet nicht wegzudenken. In den letzten Jahren gewannen auch Sprachen an Popularität, die zu JavaScript kompilieren, wie zum Beispiel TypeScript oder ClojureScript. Da JavaScript die Basis dieser Sprachen bildet und sich gut in diese Übersetzten lässt, ist eine Implementierung in der \enquote{Grundsprache} am besten dazu geeignet, die Anforderung eine anschaulichen und verständlichen Umsetzung zu erfüllen.
+\subsection{VueJS}
+Da es sich beim Prototypen nicht um eine statische Website handelt, sondern oft Änderungen an der Nutzeroberfläche oder an den Applikationsdaten vorgenommen werden, bietet sich die Nutzung eines Frameworks, welches diese Interaktionen vereinfacht, an. 
+
+VueJS ist ein JavaScript Framework zum Erstellen von Benutzeroberflächen. Die Nutzung von VueJS erlaubt die Verknüpfung von HTML-Elementen mit Anwendungsdaten. So können HTML-Elemente automatisch aktualisiert werden, wenn sich ein Wert in einem Vue-Objekt ändert. Diese Verknüpfung macht auch Änderungen in die Umgekehrte Richtung möglich, also die Aktualisierung von Applikationsdaten bei Änderungen welche auf Seite der Nutzeroberfläche gemacht werden.
+
+Ein Feature von VueJS ist die Erzeugung von \enquote{components}. Hierbei handelt es sich um VueJS Instanzen, welche in HTML wiederverwendet werden können. Bei der Umsetzung des Prototypen wird die component-library vue-material genutzt, um Zugriff auf einige vorgefertigte Komponenten wie Buttons und Eingabefelder zu haben. 
+\subsection{IndexedDB}
+IndexedDB ist eine Browser-API welche das clientseitige Speichern von Daten im Browser ermöglicht. Das bedeutet, dass über IndexedDB gespeicherte Daten auch offline zur Verfügung stehen. Die Nutzung der IndexedDB Schnittstelle bietet dem Prototypen die Funktionalität der Speicherung von Offline-Daten, welche für die Erfüllung der funktionalen Anforderungen rund um Offline-First-Eigenschaften essenziell ist. 
+
+Über sogenannte ObjectStores können JavaScript Objekte gespeichert und ausgelesen werden. Die Abfrage der Objekte erfolgt über einen der Werte des Objekts, welcher als Schlüssel konfiguriert wird. Alle Änderungen welche an der Datenbank vorgenommen werden, erfolgen in Transaktionen. Änderungen an der Datenbank bestehen nur, wenn eine Transaktion erfolgreich war. Bei Komplikationen wird die Transaktion abgebrochen, wodurch die an der Datenbank während der Transaktion vorgenommenen Änderungen rückgängig gemacht werden. Somit bieten Transaktionen einen gewissen Schutz von Anwendungs- und Systemfehlern. Dies ist ein wichtiger Aspekt für die fehlerfreie Gewährleistung der CRDT-Funktionalitäten.
+\subsection{idb}
+Die Event- und Callback-basierte Schnittstelle, welche IndexedDB bietet, führt dazu, dass sehr komplexer Code geschrieben werden muss um simple Operationen an der Datenbank durchzuführen \autocite{InproceedingsIDBdoof}. Um dieses Problem zu vermeiden und guten, lesbaren Code zu schreiben wird bei der Umsetzung des Prototypen auf die library idb zurückgegriffen. Bei idb handelt es sich um einen API-Wrapper, welche die API vereinfacht und Zugriff auf die Datenbank über JavaScript Promises anstelle von Events und Callbacks bietet. Listing \ref{lst:indexeddbexample} zeigt das erzeugen eines Object-Stores über die gewöhnliche IndexedDB API, in Listing \ref{lst:idbexample} ist die gleiche Aktion mit der idb API umgesetzt. Während in der gewöhnlichen Variante mit Callbacks weitergearbeitet werden muss, gibt die idb API mit \enquote{idb.open} ein Promise zurück.
+
+\lstinputlisting[language=JavaScript, caption=IndexedDB: öffnen eines Object-Stores, label={lst:indexeddbexample}]{code/indexedexample.js}
+
+\lstinputlisting[language=JavaScript, caption={idb: öffnen eines Object-Stores}, label={lst:idbexample}]{code/idbexample.js}
+	
+\subsection{Node.js, Express.js, MongoDB}
+
+Obwohl die entwickelte CRDT Implementierung mit jeder Datenbank kompatibel ist, die Daten schreiben, lesen und suchen kann, wird zu demonstrativen Zwecken doch ein Node.js Server aufgesetzt der mit einer MongoDB Datenbank verbunden ist. Node.js ist eine JavaScript Laufzeitumgebung, welche gewöhnlich zum Betreiben von Webservern genutzt wird. Für das Bereitstellen der einzelnen Route wird, wie üblich, Express.js genutzt. Die Datenbank muss, wie in Sektion \ref{sec:Architektur} erläutert, nur eine Tabelle für das Speichern von Operationen verwalten. Als Beispiel wird hier eine MongoDB Datenbank mit Mongoose als Object Data Modeling library verwendet. Die Wahl fiel auf MongoDB weil es eine populäre Datenbank ist, funktionale Kriterien spielten bei der Wahl der Datenbank keine Rolle. 
+
+\section{Entwurf der Nutzeroberfläche}
+
+Aus den funktionalen Anforderungen lässt sich ein Entwurf für die Nutzeroberfläche des Prototypen erstellen. Abbildung \ref{fig:rezepteFrame} zeigt den Hauptbildschirm der Website. Hier kann der Nutzer Rezepte hinzufügen, löschen und die Namen der angelegten Rezepte bearbeiten. Der \enquote{Sync} Button initialisiert das Synchronisieren mit dem Server. Über den Knopf \enquote{Zutaten} gelangt der Nutzer zur Übersicht der Zutaten des jeweiligen Rezepts. Wie auf Abbildung \ref{fig:zutatenFrame} zu erkennen ist, kann der Nutzer hier neue Zutaten für das Rezept anlegen und bestehende Zutaten bearbeiten oder löschen. Darüber hinaus kann er jeder angelegten zutat eine Menge zuweisen, und auch diese bearbeiten. 
+
+\begin{figure}
+	\centering
+	\begin{minipage}{.45\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{wireframeRezepte2.png}
+		\caption{\enquote{Hauptbildschirm}}
+		\label{fig:rezepteFrame}
+	\end{minipage}
+	\begin{minipage}{.45\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{wireframeZutaten2.png}
+		\caption{\enquote{Übersicht Zutaten}}
+		\label{fig:zutatenFrame}
+	\end{minipage}
+\end{figure}
+
+
+
+\section{CRDT Umsetzung}
 
 \section{User Interface}
 \section{Schnittstellen}
