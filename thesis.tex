@@ -8,7 +8,6 @@
 \usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage[pdftex]{xcolor}
 \usepackage{textcomp}
 \usepackage{caption}
 \usepackage{parskip}
@@ -16,11 +15,21 @@
 \usepackage{chngcntr}
 \usepackage{acronym}
 \usepackage{fancyhdr}
+\usepackage[table,xcdraw,pdftex]{xcolor}
 
 \usepackage{jslistings}
 
 
-\lstset{basicstyle=\footnotesize\ttfamily\small,breaklines=true}
+\lstset{basicstyle=\footnotesize\ttfamily\small,
+		breaklines=true,
+		extendedchars=true,
+		inputencoding=utf8,
+		literate= 
+			{ä}{{\"a}}1%
+			{ö}{{\"o}}1%
+			{ü}{{\"u}}1,%
+}
+
 
 
 \usepackage[
@@ -89,7 +98,9 @@ natbib=true
 		\acro{JSON}{JavaScript Object Notation}
 		\acro{HTTP}{Hypertext Transfer Protocol}
 		\acro{HTTPS}{Hypertext Transfer Protocol Secure}
+		\acro{LWW}{Last-Writer-Wins}
 		\acro{LWW-Register}{Last-Writer-Wins Register}
+		\acro{G-Set}{Grow-Only Set}
 	\end{acronym}
 \chapter{Abstract}
 TODO: Acronyms, Figures
@@ -292,6 +303,7 @@ Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzu
 In der Literatur werden CRDTs in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung erfolgt danach, wie das Zusammenführen der Objekte funktioniert.
 
 \begin{description}
+\label{sec:stateopbased}
 	\item[State-based]
 	Beim Synchronisieren von state-based CRDTs wird der gesamte Zustand der Objekte ausgetauscht.
 	Die Merge-Funktion ist anschließend in der Lage, beide Zustände zu einem zu kombinieren. 
@@ -313,6 +325,7 @@ Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert
 
 %TODO Counter auslassen weil ich ihn nicht benutze?
 \subsection{Grow-Only Set}
+\label{sec:g-set}
 Ein Set ist abstrakter Datentyp, welcher eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind jedoch nicht kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt weiterhin im Set.
 
 Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen-Operation. Das Entfernen des Objektes kann durch eine \enquote{Tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
@@ -328,6 +341,7 @@ Ziel der Arbeit ist es, einen Prototypen zu entwickeln welcher die Nutzung von C
 Deshalb wird eine Applikation zum Verwalten von Rezepten entwickelt, welche es Nutzern ermöglicht, ein gemeinsames Rezeptebuch zu pflegen. Da Nutzer in der Lage sein sollen online, offline und zur gleichen Zeit Rezepte anlegen, speichern und bearbeiten zu können, ist dies ein geeignetes Szenario um die Nutzung von CRDTs zu begutachten. 
 
 \section{Anforderungsanalyse}
+\label{sec:anforderungsanalyse}
 
 In diesem Kapitel werden die funktionalen und nicht-funktionalen Anforderungen an den im Rahmen dieser Arbeit entwickelten Prototypen beschrieben.
 
@@ -409,19 +423,26 @@ IndexedDB ist eine Browser-API welche das clientseitige Speichern von Daten im B
 \subsection{idb}
 Die Event- und Callback-basierte Schnittstelle, welche IndexedDB bietet, führt dazu, dass sehr komplexer Code geschrieben werden muss um simple Operationen an der Datenbank durchzuführen \autocite{InproceedingsIDBdoof}. Um dieses Problem zu vermeiden und guten, lesbaren Code zu schreiben wird bei der Umsetzung des Prototypen auf die library idb zurückgegriffen. Bei idb handelt es sich um einen API-Wrapper, welche die API vereinfacht und Zugriff auf die Datenbank über JavaScript Promises anstelle von Events und Callbacks bietet. Listing \ref{lst:indexeddbexample} zeigt das erzeugen eines Object-Stores über die gewöhnliche IndexedDB API, in Listing \ref{lst:idbexample} ist die gleiche Aktion mit der idb API umgesetzt. Während in der gewöhnlichen Variante mit Callbacks weitergearbeitet werden muss, gibt die idb API mit \enquote{idb.open} ein Promise zurück.
 
+\begin{minipage}{\linewidth}
 \lstinputlisting[language=JavaScript, caption=IndexedDB: öffnen eines Object-Stores, label={lst:indexeddbexample}]{code/indexedexample.js}
+\end{minipage}
 
+\begin{minipage}{\linewidth}
 \lstinputlisting[language=JavaScript, caption={idb: öffnen eines Object-Stores}, label={lst:idbexample}]{code/idbexample.js}
-	
+\end{minipage}
+
 \subsection{Node.js, Express.js, MongoDB}
 
 Obwohl die entwickelte CRDT Implementierung mit jeder Datenbank kompatibel ist, die Daten schreiben, lesen und suchen kann, wird zu demonstrativen Zwecken doch ein Node.js Server aufgesetzt der mit einer MongoDB Datenbank verbunden ist. Node.js ist eine JavaScript Laufzeitumgebung, welche gewöhnlich zum Betreiben von Webservern genutzt wird. Für das Bereitstellen der einzelnen Route wird, wie üblich, Express.js genutzt. Die Datenbank muss, wie in Sektion \ref{sec:Architektur} erläutert, nur eine Tabelle für das Speichern von Operationen verwalten. Als Beispiel wird hier eine MongoDB Datenbank mit Mongoose als Object Data Modeling library verwendet. Die Wahl fiel auf MongoDB weil es eine populäre Datenbank ist, funktionale Kriterien spielten bei der Wahl der Datenbank keine Rolle. 
+
+\subsection{Sonstiges}
+UUIDv4, google Roboto font, google material icons
 
 \section{Entwurf der Nutzeroberfläche}
 
 Aus den funktionalen Anforderungen lässt sich ein Entwurf für die Nutzeroberfläche des Prototypen erstellen. Abbildung \ref{fig:rezepteFrame} zeigt den Hauptbildschirm der Website. Hier kann der Nutzer Rezepte hinzufügen, löschen und die Namen der angelegten Rezepte bearbeiten. Der \enquote{Sync} Button initialisiert das Synchronisieren mit dem Server. Über den Knopf \enquote{Zutaten} gelangt der Nutzer zur Übersicht der Zutaten des jeweiligen Rezepts. Wie auf Abbildung \ref{fig:zutatenFrame} zu erkennen ist, kann der Nutzer hier neue Zutaten für das Rezept anlegen und bestehende Zutaten bearbeiten oder löschen. Darüber hinaus kann er jeder angelegten zutat eine Menge zuweisen, und auch diese bearbeiten. 
 
-\begin{figure}
+\begin{figure}[h!]
 	\centering
 	\begin{minipage}{.45\textwidth}
 		\centering
@@ -439,7 +460,114 @@ Aus den funktionalen Anforderungen lässt sich ein Entwurf für die Nutzeroberfl
 
 
 
-\section{CRDT Umsetzung}
+\section{Datenstruktur}
+
+Diese Sektion beschreibt die Planung der Datenstruktur für den Prototypen. Erster Schritt dieser Planung ist es, zu ermittelt, welche Daten von der Datenstruktur verwaltet werden müssen und wie diese von der Applikation genutzt werden. Das Vorgehen ist, die Grundlagen der Datenstruktur erst in konventionellen Datentypen zu entwerfen und diese anschließend um CRDT Funktionalitäten zu erweitern. Dies bietet sich an da, CRDTs üblicherweise auf konventionellen Datentypen aufbauen und die Datenstruktur schließlich auf die Applikation zugeschnitten sein soll und nicht umgekehrt. Würde mit dem Entwurf des CRDT begonnen werden, bevor die Grundlagen der Applikation festgelegt sind, müsste sich die Applikation der Datenstruktur anpassen. Dies gilt es zu vermeiden, es sei denn die Rahmenbedingungen fordern aus anderen Gründen eine bestimmte Datenstruktur, was in dieser Arbeit jedoch explizit nicht der Fall ist. Ziel des Prototypen ist es, die Datenstruktur an die Applikation anzupassen. 
+
+\subsection{Grundlagen der Datenstruktur}
+
+Die in Sektion \ref{sec:anforderungsanalyse} formulierten Anforderungen formulieren, dass es in der Applikation um das Speichern, bearbeiten und Löschen von Rezepten und ihren Zutaten geht. Nun gilt es, zu modellieren, wie ein solches Rezept als Objekt in der Applikation aussieht. 
+
+Listing \ref{lst:rezeptv1} zeigt die die Struktur eines Rezeptes als einzelnes JavaScript Objekt. Neben einer ID verfügt es noch über die Eigenschaften \enquote{name}, welche den Namen des Rezepts speichert und die Eigenschaft \enquote{ingredients}. Bei \enquote{ingredients} handelt es sich um ein Array an Objekten, welche jeweils eine Zutat mit Namen (\enquote{name}) und Mengenangabe (\enquote{measure}) abbilden. Darüber hinaus erhält das Rezept zur Identifikation eine generierte ID. Da, wie in Sektion \ref{fig:architektur} erläutert, das lokale Speichern über die IndexedDB API erfolgt, können die Rezepte auch direkt als Objekte in der Datenbank des Browsers gespeichert werden. Auch die Verschachtelung der Objekte stellt kein Problem dar, da IndexedDB auch Objekte mit Objekten als Eigenschaft speichert. Zwischen Applikation und lokalem Speichern muss folglich keine Umwandlung der Daten erfolgen.
+
+%In diesem Modell ist ein Rezept schlussendlich ein verschachteltes Objekt und die gesamten Applikationsdaten lassen sich in einer Sammlung aller Rezepte finden. Übertragen auf abstrakte Datentypen wäre ein Rezept eine Map. Diese Map enthält die Schlüssel \enquote{name} und \enquote{ingredients}. Während zu dem Schlüssel \enquote{name} ein String als Wert gespeichert werden soll, dient der Schlüssel \enquote{ingredients} zur Speicherung der Zutaten des Rezeptes. Da ein Rezept mehr als eine Zutat haben kann, handelt es sich hierbei um ein Set. Dieses Set besteht wiederum aus den Zutaten Objekten, welche, genau wie das Rezept, Daten in Schlüssel-Wert Paaren beinhalten. Somit handelt es auch bei den Zutaten um Maps.
+
+%Somit wäre ein Rezept schlussgefolgert eine Map, welche einen einzelnen Wert und ein Set speichert, welches wiederum eine unbestimmte Anzahl an Maps speichert, welche wiederum einzelne Werte speichern.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption={Beispiel Rezept verschachtelt}, label={lst:rezeptv1}]{code/recipev1.js}
+\end{minipage} 
+
+Ein solches Modell ist nicht unüblich und gerade in JavaScript Anwendungen, weil Objekte in diesen oft verschachtelt sind, häufig praktisch. Beim Einsatz von CRDTs jedoch, lohnt es sich die Datenstruktur so flach wie möglich zu gestalten. Wir erinnern uns -- Ein CRDT baut auf normalen Datenstrukturen auf. Wenn es die Möglichkeit gibt, die Komplexität der ausgehenden Datenstruktur zu reduzieren, bedeutet dass auch eine Reduzierung an Komplexität für die zu implementierenden CRDT-Funktionalitäten.
+
+Eine Option, die Datenstruktur abzuflachen besteht darin, die in Listing \ref{lst:rezeptv1} gezeigten Daten zu normalisieren und somit relational abzubilden. In diesem Fall werden die Zutaten nicht als Array in dem Rezept verschachtelt, sondern werden einzeln gespeichert. Listing \ref{lst:rezeptv2} zeigt ein Rezept in der relationalen Modellierung, Listing \ref{lst:ingredientv2} eine dazugehörige Zutat. Die Verbindung zwischen Rezepten und Zutaten wird nun über die Eingenschaft \enquote{recipe} der Zutaten definiert. Hier wird die ID des Rezepts hinterlegt, welchem die Zutat zugehörig ist.
+
+%TODO NORMALISIERUNG DARSTELLEN
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption={Beispiel Rezept relational}, label={lst:rezeptv2}]{code/recipev2.js}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+\lstinputlisting[language=JavaScript, caption={Beispiel Zutat relational}, label={lst:ingredientv2}]{code/ingredientsv2.js}
+\end{minipage}
+
+\subsection{Erweiterung zum CRDT}
+
+Währen sich bei konventionellen Datentypen nicht viel daran ändert, ob eine Zutat über \enquote{recipe.ingredient}, wie es in Listing \ref{lst:rezeptv1} der Fall wäre, oder \enquote{ingredient}, siehe Listing \ref{lst:rezeptv2} angesprochen wird, wäre die Umsetzung als CRDT in der verschachtelten Variante deutlich komplexer. Die Ursache dafür ist, dass die Änderungen an Zutaten schließlich auch von CRDT-Funktionalitäten profitieren sollten. Das Modell für ein Rezept müsste deshalb als CRDT entworfen werden, welches ein weiteres CRDT als Eigenschaft hält. Dies ist in der Umsetzung durchaus möglich, in diesem Fall aber leicht durch die relationale Herangehensweise zu vermeiden.
+
+Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, sondern eines was den Anforderungen der Anwendung gerecht wird, gilt es nun zu ermitteln, welche Schnittstellen es der Applikation zur Verfügung stellen muss. Aus der Anforderungsanalyse, welche in in Sektion \ref{sec:anforderungsanalyse} durchgeführt wurde, lassen sich die Anforderungen an das CRDT ableiten. Tabelle \ref{tab:crdtAnforderungen} fasst diese als Schnittstellen zusammen, welche die Datenstruktur der Applikation bereitstellen muss. 
+
+\begin{table}[]
+	\caption{CRDT Schnittstellen}
+	\label{tab:crdtAnforderungen}
+	\resizebox{\textwidth}{!}{%
+		\bgroup
+		\def\arraystretch{1,5}%
+		\begin{tabular}{|l|l|}
+			\hline
+			\rowcolor[HTML]{EFEFEF} 
+			Funktionale Anforderung & Datenstruktur Anforderung \\ \hline
+			Anlegen von Rezepten & \begin{tabular}[c]{@{}l@{}}Verwaltung einer Sammlung von beliebig vielen Rezepten\\ Hinzufügen eines Rezepts in die Rezeptesammlung.\end{tabular} \\ \hline
+			Anlegen von Zutaten & \begin{tabular}[c]{@{}l@{}}Verwaltung einer Sammlung von  beliebig vielen Zutaten\\ Hinzufügen einer Zutat in die Zutatensammlung.\end{tabular} \\ \hline
+			Bearbeiten und Löschen & \begin{tabular}[c]{@{}l@{}}Bearbeitung der Eigenschaften Rezeptname, Zutatenname, Zutatenmenge.\\ Entfernen eines Rezeptes aus der Rezeptesammlung.\\ Entfernen einer Zutat aus der Zutatensammlung.\end{tabular} \\ \hline
+		\end{tabular}%
+		\egroup
+	}
+\end{table}
+
+Die Umsetzung im Prototypen erfolgt durch ein \enquote{Operation-based} CRDT. Wie in Sektion \ref{sec:stateopbased} erläutert, werden alle Änderungen, welche an den Applikationsdaten erfolgen, einzeln als sogenannte Operationen abgespeichert. Wie Rezepte und Zutaten werden auch die Operationen über die IndexedDB API lokal im Browser gespeichert.
+
+Listing \ref{lst:operationv1} zeigt eine Operation, welche beim Umbenennen des in Listing \ref{lst:rezeptv2} entworfenen Rezeptes erzeugt und gespeichert wird. Die Felder \enquote{store}, \enquote{object} und  \enquote{key} dienen der Identifikation des Wertes, der geändert werden soll, \enquote{value} beschreibt den neuen Wert. Die dargestellte Operation dokumentiert also, dass im Object-Store \enquote{recipes} der Wert des Schlüssels \enquote{name} vom Objekt \enquote{re\_ckdiw1bxw002411w66m7mol85s} zu \enquote{Tomaten-Paprika-Salat} geändert werden soll. Darüber hinaus erhält die Operation noch eine eigene ID und einen Zeitstempel. Der Zeitstempel dient dazu, eine konfliktfreie Synchronisation zu gewährleisten, mehr dazu im nächsten Abschnitt. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption={Beispiel Operation}, label={lst:operationv1}]{code/operationv1.js}
+\end{minipage}
+
+\subsection{Parallele Änderungen}
+
+Zwei Replikationen können sich synchronisieren, indem sie ihre gespeicherten Operationen austauschen. Nachdem eine Replikation über diesen Weg eingehende Operationen erhalten hat, müssen die Operationen auf die Applikationsdaten angewendet werden, damit die Änderungen einen Effekt haben. Nachdem eine eingehende Operation angewandt wurde, wird sie zu den lokalen Operationen abgespeichert.
+
+Beim Anwenden der Operationen kann es vorkommen, dass zwei Operationen Änderungen am gleichen Wert vorgenommen haben. Für solche Fälle, genannt parallele Änderungen, müssen Regeln implementiert werden, um zu entscheiden, welche der parallelen Änderungen den Vorzug bekommt. Nur so ist gewährleistet, dass zwei Replikationen nach dem Synchronisieren auf dem gleichen Stand sind, wäre die Auswahl zufällig, oder würde sich stets die lokale Änderung durchsetzen, könnten die Applikationsdaten von einander abweichen. So wäre Konvergenz zwischen den Replikationen und somit \ac{SEC} nicht gewährleistet und der Einsatz von CRDTs überflüssig.
+
+Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt. Abbildung \ref{fig:flwochartOperationen} zeigt, wie entschieden wird, ob eine eingehende Operation angewendet wird. Zuerst wird überprüft, ob es für eine eingehende Operation, welche angewandt werden soll, bereits eine lokale Operationen gibt, welche den selben Wert betreffen. Ist dies der Fall, werden die Zeitstempel der aktuellsten lokalen Operation und der eingehenden Operationen verglichen. Ist die lokale Operation neuer als die eingehende Operation, wird die eingehende Operation ignoriert. Ist hingegen die eingehende Operation neuer, wird sie angewandt und anschließend, wie vorgesehen, zu den lokalen Operationen hinzugefügt.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{flowchartOperationen.png}
+	\caption{\enquote{Bearbeiten einer eingehenden Operation}}
+	\label{fig:flwochartOperationen}
+\end{figure}
+
+\subsection{Anwenden von Operationen}
+
+Auch beim Anwenden von Operationen gilt es, einigen potentiellen Fehlern aus dem Weg zu Gehen. Da die Operationen kommutativ anwendbar sein sollen, kann es vorkommen, dass ein Objekt bearbeitet werden soll, welches lokal noch nicht existiert. Damit eine solche Änderung nicht verloren geht, wird das Objekt beim Anwenden der Änderung erstellt, sollte es noch nicht existieren. Wichtig hierbei ist, dass das neue Objekt keine zufällige ID zugewiesen bekommt, sondern die in der Operation hinterlegte ID des fehlenden Objektes. Anschließend kann die Operation wie vorgesehen auf das neue Objekt angewandt werden. Durch diese Semantik ist es möglich, die \enquote{Erstellen} und \enquote{Bearbeiten} Schnittstellen (siehe Tabelle \ref{tab:crdtAnforderungen}) mit der gleichen Methode umzusetzen. Eine Operation zum Erstellen eines Objektes wird einfach genau wie eine Operation zum Bearbeiten angelegt, statt einer bestehenden ID beim Bearbeiten wird jedoch eine neue ID erzeugt. Somit wird das Objekt beim Anwenden der Operation erzeugt, da es sich um eine unbekannte ID handelt. 
+
+Ein weiterer Fehlerfall droht beim Entfernen von Rezepten und Zutaten, welches neben dem Anlegen und Bearbeiten auch eine weitere Schnittstellen zur Datenstruktur ist (siehe Tabelle \ref{tab:crdtAnforderungen}). Abbildung \ref{fig:rezeptLöschenSchlecht} zeigt die Problematik, welche auftritt wenn das Objekt tatsächlich aus der Datenbank gelöscht wird. Wird ein Objekt gelöscht und anschließend bearbeitet kommt die Applikation nicht auf den gleichen Stand wie wenn die Operationen in umgekehrter Reihenfolge angewandt werden. Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könnten sich nach dem Synchronisieren unterscheiden. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.66\textwidth]{deleteRecipeBad.png}
+	\caption{\enquote{Fehlerfall beim Entfernen eines Rezeptes}}
+	\label{fig:rezeptLöschenSchlecht}
+\end{figure}
+
+Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (siehe Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass Rezepte und Zutaten nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \enquote{tombstone}. Beim \enquote{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen, wie das Anlegen und Bearbeiten.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption={Beispiel Entfernen-Operation}, label={lst:operationv2}]{code/operationTombstone.js}
+\end{minipage}
+
+Listing \ref{lst:operationv2} zeigt, wie eine Entfernen-Operation ebenso Informationen über das Zielobjekt enthält. Der Angesprochene Schlüssel ist dabei immer \enquote{tombstone}, der Wert \enquote{1} indiziert, dass das Objekt als entfernt zu behandeln ist. Wäre eine Schnittstelle zum Reaktivieren des Objekts gewünscht, so könnte dies durch das ändern des \enquote{tombstone} Werts auf \enquote{0} umgesetzt werden. Abbildung \ref{fig:rezeptLöschenGut} zeigt, wie die Anwendung der vorher fehlerverursachenden Operationen durch die Nutzung des \enquote{tombstone} Indikators wieder Kommutativ ist.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.66\textwidth]{deleteRecipeGood.png}
+	\caption{\enquote{Korrektes Entfernen eines Rezeptes}}
+	\label{fig:rezeptLöschenGut}
+\end{figure}
+
+
 
 \section{User Interface}
 \section{Schnittstellen}
