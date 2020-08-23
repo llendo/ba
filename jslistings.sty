@@ -8,10 +8,10 @@
 \usepackage{hyperref}
 \usepackage{courier}
 
-\definecolor{jskeywords}{HTML}{ff0066}% JavaScript keywords
+\definecolor{jskeywords}{HTML}{3333ff}% JavaScript keywords
 \definecolor{jsextkeywords}{HTML}{cc66ff}% JavaScript extended keywords
 
-\definecolor{identifiers}{HTML}{00284d} % identfiers
+\definecolor{identifiers}{HTML}{000000} % identfiers
 \definecolor{string}{HTML}{cc6600} % string literals
 \definecolor{allcomment}{HTML}{808080} % comment
 
@@ -30,6 +30,31 @@
 \captionsetup[lstlisting]{font={color=captioncolor, small, tt}}
 \DeclareCaptionFormat{listing}{\rule{\dimexpr\textwidth+17pt\relax}{0.4pt}\vskip1pt#1#2#3}
 \captionsetup[lstlisting]{format=listing,singlelinecheck=false, margin=0pt, font={sf},labelsep=space,labelfont=bf}
+
+\lstdefinelanguage{Html5}{
+	language=html,
+	sensitive=true, 
+	alsoletter={<>=-},
+	otherkeywords={
+		% HTML tags
+		<html>, <head>, <title>, </title>, <meta, />, </head>, <body>,
+		<canvas, \/canvas>, <script>, </script>, </body>, </html>, <!, html>, <style>, </style>
+	},  
+	ndkeywords={
+		% General
+		=,
+		% HTML attributes
+		charset=, id=, width=, height=,
+		% CSS properties
+		border:, transform:, -moz-transform:, transition-duration:, transition-property:, transition-timing-function:
+	},  
+	deletekeywords={
+		name
+	},
+	morecomment=[s]{<!--}{-->},
+	tag=[s]
+}
+
 
 \lstdefinelanguage{JavaScript}{
     alsoletter={.},
@@ -54,8 +79,9 @@
 }
 
   \lstset{
-   basicstyle=\normalsize\linespread{1.1}\footnotesize\ttfamily,
+   basicstyle=\normalsize\linespread{0.8}\footnotesize\ttfamily,
    language=JavaScript,
+   alsolanguage=Html5,
    frame=top,frame=bottom,
    breaklines=true,
    showstringspaces=false,

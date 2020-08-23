@@ -14,13 +14,17 @@
 \usepackage[onehalfspacing]{setspace}
 \usepackage{chngcntr}
 \usepackage{acronym}
+\usepackage{dirtree}
 \usepackage{fancyhdr}
+\usepackage[export]{adjustbox}
 \usepackage[table,xcdraw,pdftex]{xcolor}
+\usepackage{calc}
+\usepackage{enumitem}
 
 \usepackage{jslistings}
 
 
-\lstset{basicstyle=\footnotesize\ttfamily\small,
+\lstset{basicstyle=\normalsize\linespread{1}\ttfamily\small,
 		breaklines=true,
 		extendedchars=true,
 		inputencoding=utf8,
@@ -101,6 +105,7 @@ natbib=true
 		\acro{LWW}{Last-Writer-Wins}
 		\acro{LWW-Register}{Last-Writer-Wins Register}
 		\acro{G-Set}{Grow-Only Set}
+		\acro{CORS}{Cross-Origin Resource Sharing}
 	\end{acronym}
 \chapter{Abstract}
 TODO: Acronyms, Figures
@@ -143,18 +148,18 @@ Als Prototyp wird ein Online-Kochbuch mit folgenden Funktionen umgesetzt:
 \label{sec:VerwandteArbeiten}
 CRDTs sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von CRDTs, um \ac{SEC} in großen verteilten Systemen zu garantieren. \ac{SEC} erweitert den bis dahin verbreiteten Ansatz der \ac{EC}. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
 
-Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Library CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
+Seitdem hat sich die Verwendung von CRDTs in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
 
 Mit Woot \klammercite{InproceedingsCRDTWoot}, Logoot \klammercite{InproceedingsCRDTLogoot}, LSEQ \klammercite{InproceedingsCRDTLSEQ} sind bereits CRDTs speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
-Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von CRDTs für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt.
-%todo satz kürzen, Darüber hinaus
+Der Anzahl an Quellen und Resourcen rund um CRDTs mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von CRDTs für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die CRDTs konzipiert sind, sind mir keine wissenschaftlichen Arbeiten über den konkreten Einsatz von CRDTs in Offline-First Applikationen bekannt. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{CRDTs for Mortals} \autocite{OnlineCrdtsForMortals}, in welchem über den Einsatz von CRDTs im Client-Server Modell gesprochen wird. In dem Vortrag geht es jedoch um die Entwicklung einer komplett lokalen Applikation.
 
-Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Applikation umzusetzen und zu ermitteln, welche besonderen Herausforderungen diese Umgebung aufweist.
+Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von CRDTs in einer Offline-First Webanwendung umzusetzen und zu ermitteln, welche besonderen Herausforderungen diese Umgebung aufweist.
+
 \chapter{Grundlagen}
 Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte auf welchen Offline-First Applikationen und CRDTs aufbauen. 
 \section{Definition: Offline-First}\label{sec:DefinitionOfflineFirst}
-Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Dies gilt auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen.
+Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht \autocite{OnlineGoogleProgressiveWebApps}. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Dies gilt auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass dem Nutzer auch offline so viele Funktionalitäten wie möglich zur Verfugung stehen \autocite{ArticleDesigningOfflineFirst}.
 
 
 
@@ -166,8 +171,7 @@ Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripte, die 
 In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über \ac{HTTP}-Requests an den Server angefordert. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler können gezielt entscheiden, welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann\autocite{OnlineServiceWorkersAnIntroduction}. Dies ist eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
 
 \section{Caching}
-
-Es folgen einige grundlegende Caching-Strategien, mit Beispielen, für welche Art Requests sie sich eignen könnten.
+In dieser Sektion werden einige grundlegende Caching-Strategien beschrieben, mit Beispielen, für welche Art Requests sie sich eignen könnten.
 
 \subsubsection{\enquote{Erst Netzwerk, dann Cache}}
 Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request, den der Service Worker zuerst über das Netzwerk delegiert. Falls die Kommunikation mit dem Internet unterbrochen ist, beispielsweise wenn der Nutzer offline ist, leitet der Service Worker den Request an den Cache weiter. Diese Methode eignet sich für Requests, bei denen aktuelle Daten bevorzugt sind, dem Nutzer aber eine ältere Version zur Verfügung gestellt werden soll, wenn die Internetverbindung unterbrochen ist.
@@ -182,6 +186,7 @@ Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request, den der Servic
 
 
 \subsubsection{\enquote{Erst Cache, dann Netzwerk}}
+\label{sec:cachedannnetzwerk}
 Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als \ac{HTTP}-Request an den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
 
 \begin{figure}[h]
@@ -231,14 +236,14 @@ Die folgende Liste zeigt, dass funktionsfähige Offline-First Applikationen die 
 
 \begin{description}		
 \item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb die Endgeräte auch untereinander über unterschiedlichste Hardware verfügen können.
-\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität. Offline interagiert der Nutzer nur mit seinem Endgerät, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für den Nutzer jedoch nicht von Belang. \item[Konsistente und einheitliche Interaktion]
+\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität \autocite{OnlineGoogleOfflineFirst}. Offline interagiert der Nutzer nur mit seinem Endgerät, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für den Nutzer jedoch nicht von Belang. \item[Konsistente und einheitliche Interaktion]
 Unabhängig davon, welches Endgerät der Nutzer verwendet, sollen ihm früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Der Nutzer muss sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
 \item[Kontinuierliche Verfügbarkeit]
 Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Der Nutzer kann seine Arbeit auch fortführen, wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
 \end{description}
 \label{tab:charakteristikaOfflineFirst}
 
-Daraus ergibt sich, dass es sich bei Offline-First Webanwendungen um verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in Abschnitt \ref{sec:Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (siehe \ref{sec:VerwandteArbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von optimistischen Replikationsverfahren. 
+Daraus ergibt sich, dass es sich bei Offline-First Webanwendungen um verteilte Systeme handelt. Diese Erkenntnis kann dabei helfen, Probleme von Offline-First Applikationen zu lösen. Bei Offline-First handelt es sich um ein relativ junges Konzept. Obwohl Progressive Web Apps mittlerweile häufig im Netz anzutreffen sind, erfüllt deren Offlinefunktionalität selten Offline-First Kriterien. Für Probleme wie die in Abschnitt \ref{sec:Problemfeld} beschriebene Synchronisation von Daten gibt es deshalb wenige beschriebene Lösungsansätze oder konkrete wissenschaftliche Arbeiten (vgl. Sektion \ref{sec:VerwandteArbeiten}). Mit verteilten Systemen hingegen beschäftigt sich die Informatik bereits seit den 70er Jahren \autocite{Andrews1999FoundationsOM}. Lösungen, welche für die Herausforderungen von verteilten Systemen entwickelt wurden, kommen also auch für Offline-First Webapplikationen in Frage. Eine dieser Lösungen ist die Nutzung von optimistischen Replikationsverfahren. 
 
 \section{Replikation}
 
@@ -248,14 +253,14 @@ Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten
 
 Traditionelle Strategien, um die Replikationen auf dem selben Stand zu halten, folgen dem Modell der \ac{SC}. \ac{SC} setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
 
-Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (siehe \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
+Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (vgl. \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
 
 
 \subsection{Optimistische Replikation: Eventual Consistency}
 
 Die optimistische Replikation, auch genannt \acf{EC}, ist ein alternatives Modell der Datenreplikation, welches den Replikationen erlaubt, voneinander abzuweichen.
 
-Die Implementierung von optimistischer Replikation bietet sich somit als Lösung für Systeme an, welche besonderen Wert auf kontinuierliche Verfügbarkeit legen, wie Offline-First Applikationen (siehe Sektion \ref{sec:OfflineFirstVerteiteSysteme}). 
+Die Implementierung von optimistischer Replikation bietet sich somit als Lösung für Systeme an, welche besonderen Wert auf kontinuierliche Verfügbarkeit legen, wie Offline-First Applikationen (vgl. Sektion \ref{sec:OfflineFirstVerteiteSysteme}). 
 
 Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nimmt der Nutzer eine Änderung vor, so wird diese auf seiner Replikation sofort umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben sowie selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S.46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
 
@@ -282,15 +287,17 @@ Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herau
 %TODO Evtl Charakteristika beschreiben 
 
 \section{CRDTs}
+\label{sec:crdts}
 
 CRDTs sind abstrakte Datentypen, die in verteilten Systemen eingesetzt werden, um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Registern, Sets und Maps. CRDTs erweitern diese Datentypen um eine Schnittstelle, welche das Daten-Objekt neben den klassischen Operationen wie dem Auslesen des gespeicherten Wertes um zusätzliche Funktionalitäten erweitert, um \ac{SEC} zu gewährleisten.\autocite[S.1 ]{ArticleCRDTOverview}
 
-Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Wertes des Objekts. Weitere Daten, um welche CRDTs klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (siehe \ref{sec:LWW REGISTER}).
+Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Wertes des Objekts. Weitere Daten, um welche CRDTs klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (vgl. \ref{sec:LWW REGISTER}).
 %todo WERT = Besseres wort finden? Value?
 %todo: Abbildung CRDT mit Value, Merge, Zusatz
 Die Datentypen werden speziell so modelliert, dass das Aktualisieren von CRDTs kommutativ, assoziativ und idempotent erfolgen kann \autocite{InproceedingsCrdtsInProduction}.
 
 \begin{description}
+	\label{sec:kommuassoidem}
 	\item[Kommutativ] Wenn zwei CRDTs Aktualisierungen austauschen, ist das Ergebnis identisch, unabhängig davon, in welcher Reihenfolge dies geschieht.% (a merge b == b merge a)
 	\item[Assoziativ] Wenn drei CRDTs nacheinander zusammengeführt werden, ist das Ergebnis immer gleich, unabhängig davon, welche zwei der Objekte zuerst Aktualisierungen austauschen.% (a merge (b merge c) == b merge (a merge c))
 	\item[Idempotent] Das einmalige Zusammenführen zweier CRDTs hat das gleiche Ergebnis wie ein beliebig häufiges Wiederholen des Vorgangs.%(a merge b = ((((a merge b)merge b)merge b)merge b))
@@ -298,20 +305,17 @@ Die Datentypen werden speziell so modelliert, dass das Aktualisieren von CRDTs k
 
 Diese Eigenschaften führen dazu, dass sich zwei Replikationen deterministisch im gleichen Zustand befinden müssen, sobald sie den Stand ihrer Daten synchronisiert haben. Im Gegensatz zur \ac{EC} ist das System nicht mehr von einer im Konsens zu geschehenden Konfliktlösung abhängig. 
 
-Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von CRDTs in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (siehe \ref{sec:Verwandte Arbeiten}), dennoch bedarf die Verwendung von CRDTs und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich.
+Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von CRDTs in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (vgl. \ref{sec:Verwandte Arbeiten}), dennoch bedarf die Verwendung von CRDTs und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich.
 
 In der Literatur werden CRDTs in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung erfolgt danach, wie das Zusammenführen der Objekte funktioniert.
 
 \begin{description}
 \label{sec:stateopbased}
 	\item[State-based]
-	Beim Synchronisieren von state-based CRDTs wird der gesamte Zustand der Objekte ausgetauscht.
-	Die Merge-Funktion ist anschließend in der Lage, beide Zustände zu einem zu kombinieren. 
+	Beim Synchronisieren von state-based CRDTs wird der gesamte Zustand der Objekte ausgetauscht. Die Implementierung eines state-based CRDT muss über eine \enquote{Merge} Methode verfügen, damit der Zustand zweier CRDTs zu einem kombiniert werden kann, um so Konvergenz zu erreichen. Der Zustand eines state-based CRDTs wird durch einen Halbverband\footnote{\enquote{Ein Halbverband ist eine kommutative Halbgruppe (d.h. eine Menge H mit einer assoziativen und kommutativen binären Verknüpfung $\sqcap$), in der jedes Element idempotent ist [..]} \autocite{MiscHalbverband}} gebildet, dessen obere Schranke den aktuellen Wert des CRDTs darstellt. \autocite{InproceedingsStateBased}
 	
 	\item[Operation-based]
-	Bei der Variante der operation-based CRDTs wird nicht der gesamte State der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der State eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Beim Mergen zweier Objekte werden diese Updates ausgetauscht und anschließend auf das jeweils andere Objekt angewandt. Da die Operationen kommutativ sein müssen,
-	%todo Siehe oben?
-	ist die Reihenfolge der Updates nicht relevant. 
+	Bei der Variante der operation-based CRDTs wird nicht der gesamte Zustand der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der Zustand eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Ändert sich beispielsweise der Wert eines Counters von 5 zu 10, so würde die Operation nicht den neuen Wert enthalten, sondern die durchgeführte Addition, also \enquote{+ 5}. Jede so erzeugte Operation muss an alle anderen Replikationen des Systems verteilt werden. Wenn eine Replikation eine solche Operation empfängt, wird die gleiche Änderung welche schon im Ursprung angewendet wurde auch hier angewandt. Da die Operationen kommutativ sein müssen, ist die Reihenfolge der Updates nicht relevant. Die Implementierung eines operation-based CRDTs muss garantieren, dass alle Replikationen diese Updates zuverlässig erhalten und anwenden \autocite[S.18-19]{ArticleCRDTOverview}. Im Gegensatz zu der Merge Methode des State-based CRDTs muss ein Operation-based CRDT also über zwei Methoden verfügen: Eine zum generieren von Operationen und eine weitere zum Anwenden von Operationen.
 \end{description} 
 
 Beide Kategorien sind äquivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet, dass ein state-based CRDT ein operation-based CRDT emulieren kann und umgekehrt.
@@ -322,13 +326,17 @@ Beide Kategorien sind äquivalent\autocite[S. 9]{InproceedingsCRDTOriginal}, was
 \sloppypar
 Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
+\subsection{LWW-Map}
+\sloppypar
+Während ein \ac{LWW-Register} ein einzelnes Schlüssel-Wert Paar darstellt, besteht eine LWW-Map aus einem bis beliebig vieler LWW-Register \autocite[43]{PhdthesisLwwMap}.
+
 
 %TODO Counter auslassen weil ich ihn nicht benutze?
 \subsection{Grow-Only Set}
 \label{sec:g-set}
 Ein Set ist abstrakter Datentyp, welcher eine Sammlung von Objekten verwaltet. Traditionelle Operationen eines Sets umfassen das Hinzufügen und Entfernen von Objekten. Diese Operationen sind jedoch nicht kommutativ: Wird dem Set ein Objekt erst hinzugefügt und anschließend entfernt, ist es im Endeffekt nicht mehr im Set vorhanden. Wird es jedoch erst entfernt und anschließend hinzugefügt, so existiert das Objekt weiterhin im Set.
 
-Ein Grow-Only Set löst dieses Problem durch das Auslassen der Entfernen-Operation. Das Entfernen des Objektes kann durch eine \enquote{Tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen. 
+Ein Grow-Only Set löst dieses Problem, indem keine Objekte aus dem Set entfernt werden können  \autocite[S.17]{ArticlePureOP}. Das Entfernen des Objektes kann durch eine \enquote{Tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen \autocite[S.7]{InproceedingsTombstone}.
 
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
 
@@ -346,7 +354,7 @@ Deshalb wird eine Applikation zum Verwalten von Rezepten entwickelt, welche es N
 In diesem Kapitel werden die funktionalen und nicht-funktionalen Anforderungen an den im Rahmen dieser Arbeit entwickelten Prototypen beschrieben.
 
 \subsection{Funktionale Anforderungen}
-Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darauf geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (siehe \ref{sec:Einleitung}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und CRDTs.
+Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darauf geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (vgl. \ref{sec:Einleitung}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und CRDTs.
 
 Üblich in einer Anforderungsanalyse ist, die Anforderungen in \enquote{kann}, \enquote{soll} und \enquote{muss} Kategorien einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf \enquote{muss} Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essentiell für das System sind.
 
@@ -377,7 +385,7 @@ Während die funktionalen Anforderungen direkt Bezug auf die Funktionalität des
 
 \begin{description}
 	\item[{[NFA 1]} Anschauliche Umsetzung: Code]
-	Ein Ziel der Arbeit ist, zu ermitteln, wie CRDTs in modernen Webanwendungen umgesetzt werden können (siehe \ref{sec:Problemfeld}). Da sich moderne Offline-First Anwendungen leider nicht in auf ein einziges Beispiel reduzieren lassen, ist bei der Umsetzung darauf zu achten die Datenstruktur so anschaulich und verständlich wie möglich zu implementieren. Dies bedeutet beispielsweise, Lesbarkeit über Effizienz beim schreiben von Programmcode zu priorisieren.
+	Ein Ziel der Arbeit ist, zu ermitteln, wie CRDTs in modernen Webanwendungen umgesetzt werden können (vgl. \ref{sec:Problemfeld}). Da sich moderne Offline-First Anwendungen leider nicht in auf ein einziges Beispiel reduzieren lassen, ist bei der Umsetzung darauf zu achten die Datenstruktur so anschaulich und verständlich wie möglich zu implementieren. Dies bedeutet beispielsweise, Lesbarkeit über Effizienz beim schreiben von Programmcode zu priorisieren.
 	\item[{[NFA 2]} Anschauliche Umsetzung: Technologien]
 	Um das in NFA 1 formulierte Ziel der Anschaulichkeit weiter zu verfolgen, soll auch die Wahl der Technologien so erfolgen, dass diese soll die Ebene der Datenstruktur in Javascript umgesetzt werden. Auch wenn Entwicklern heutzutage zahlreiche Sprachen zur Verfügung stehen, welche zu Javascript kompilieren, bleibt Javascript aufgrund der hohen Verbreitung die für demonstrative Zwecke geeignetste Sprache.
 	\item[{[NFA 3]} Unabhängigkeit von Datenbank-Technologien]
@@ -391,76 +399,49 @@ Da Daten sowohl online als auch offline gespeichert werden sollen, folgt die Ums
 
 Das der Prototyp als Offline-First Anwendung umgesetzt wird und umfangreiche Offlinefunktionalität zentraler Bestandteil der funktionalen Anforderungen sind, wirkt sich entscheidend auf die Architektur aus.
 
-Die Nutzung eines Service-Workers (siehe \ref{sec:serviceworker}) ermöglicht das zwischenspeichern der gesamten Client-seitigen Dateien, welche zum ausführen der Applikation benötigt werden. Da die Speicherung der Anwendungsdaten auch lokal erfolgen soll, ist die Anwendung nicht darauf angewiesen bei jeder Aktion des Nutzers Daten an den Server zu schicken.
+Die Nutzung eines Service-Workers (vgl. \ref{sec:serviceworker}) ermöglicht das zwischenspeichern der gesamten Client-seitigen Dateien, welche zum ausführen der Applikation benötigt werden. Da die Speicherung der Anwendungsdaten auch lokal erfolgen soll, ist die Anwendung nicht darauf angewiesen bei jeder Aktion des Nutzers Daten an den Server zu schicken.
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.25\textwidth]{architektur.png}
-	\caption{\enquote{Architektur des Prototypen}}
+	\includegraphics[width=0.33\textwidth]{architektur.png}
+	\caption{Architektur des Prototypen}
 	\label{fig:architektur}
 \end{figure}
 
-Abbildung \ref{fig:architektur} zeigt die Architektur des Prototypen. Die Clientseite setzt sich zusammen aus Frontend, Geschäftslogik und der Browser-API IndexedDB als lokalen Speicher. Zusätzlich wird die JavaScript library \enquote(idb.js) für den Zugriff auf IndexedDB genutzt. Die CRDT Funktionalitäten befinden sich in dieser Darstellung in der Geschäftslogik. 
+Abbildung \ref{fig:architektur} zeigt die Architektur des Prototypen. Die Clientseite setzt sich zusammen aus Frontend, Geschäftslogik und der Browser-API IndexedDB als lokalen Speicher. Zusätzlich wird die JavaScript-Bibliothek \enquote(idb.js) für den Zugriff auf IndexedDB genutzt. Die CRDT Funktionalitäten befinden sich in dieser Darstellung in der Geschäftslogik. 
 
-Die Serverseite beginnt mit einer API, welche nur eine einzelne \enquote{/sync} Route zur Synchronisierung von lokalen- und online-Daten bereitstellt. Über diese Schnittstelle kann der Client seine Operationen an den Server schicken und erhält als Antwort die gesammelten Operationen des Servers. Das server-seitige Speichern der Applikationen erfolgt auf einer MongoDB Datenbank. Ergänzend zu MongoDB wird noch die library Mongoose genutzt. Als Laufzeitumgebung zum Betreiben des Webservers dient Node.js.
+Die Serverseite beginnt mit einer API, welche nur eine einzelne \enquote{/sync} Route zur Synchronisierung von lokalen- und online-Daten bereitstellt. Über diese Schnittstelle kann der Client seine Operationen an den Server schicken und erhält als Antwort die gesammelten Operationen des Servers. Das server-seitige Speichern der Applikationen erfolgt auf einer MongoDB Datenbank. Ergänzend zu MongoDB wird noch die Bibliothek Mongoose genutzt. Als Laufzeitumgebung zum Betreiben des Webservers dient Node.js. Eine Ausführliche Erläuterung, aus welchen Gründen die bestimmten Technologien genutzt werden, findet sich in Abschnitt \ref{sec:TechnologienBegründung}.
 
-\section{Technologien}
 
-Es folgt eine kompakte Vorstellung der zur Umsetzung des Prototypen genutzten Technologien. Auch wird erläutert, warum die einzelnen Technologien verwendet werden.
-
-\subsection{JavaScript, HTML und CSS}
-JavaScript ist eine Skriptsprache welche zur clientseitigen Programmierung von Websites genutzt wird. Mit einer Nutzung in über 95\% \autocite{OnlineJavascriptDistr} aller Websites ist sie aus dem Internet nicht wegzudenken. In den letzten Jahren gewannen auch Sprachen an Popularität, die zu JavaScript kompilieren, wie zum Beispiel TypeScript oder ClojureScript. Da JavaScript die Basis dieser Sprachen bildet und sich gut in diese Übersetzten lässt, ist eine Implementierung in der \enquote{Grundsprache} am besten dazu geeignet, die Anforderung eine anschaulichen und verständlichen Umsetzung zu erfüllen.
-\subsection{VueJS}
-Da es sich beim Prototypen nicht um eine statische Website handelt, sondern oft Änderungen an der Nutzeroberfläche oder an den Applikationsdaten vorgenommen werden, bietet sich die Nutzung eines Frameworks, welches diese Interaktionen vereinfacht, an. 
-
-VueJS ist ein JavaScript Framework zum Erstellen von Benutzeroberflächen. Die Nutzung von VueJS erlaubt die Verknüpfung von HTML-Elementen mit Anwendungsdaten. So können HTML-Elemente automatisch aktualisiert werden, wenn sich ein Wert in einem Vue-Objekt ändert. Diese Verknüpfung macht auch Änderungen in die Umgekehrte Richtung möglich, also die Aktualisierung von Applikationsdaten bei Änderungen welche auf Seite der Nutzeroberfläche gemacht werden.
-
-Ein Feature von VueJS ist die Erzeugung von \enquote{components}. Hierbei handelt es sich um VueJS Instanzen, welche in HTML wiederverwendet werden können. Bei der Umsetzung des Prototypen wird die component-library vue-material genutzt, um Zugriff auf einige vorgefertigte Komponenten wie Buttons und Eingabefelder zu haben. 
-\subsection{IndexedDB}
-IndexedDB ist eine Browser-API welche das clientseitige Speichern von Daten im Browser ermöglicht. Das bedeutet, dass über IndexedDB gespeicherte Daten auch offline zur Verfügung stehen. Die Nutzung der IndexedDB Schnittstelle bietet dem Prototypen die Funktionalität der Speicherung von Offline-Daten, welche für die Erfüllung der funktionalen Anforderungen rund um Offline-First-Eigenschaften essenziell ist. 
-
-Über sogenannte ObjectStores können JavaScript Objekte gespeichert und ausgelesen werden. Die Abfrage der Objekte erfolgt über einen der Werte des Objekts, welcher als Schlüssel konfiguriert wird. Alle Änderungen welche an der Datenbank vorgenommen werden, erfolgen in Transaktionen. Änderungen an der Datenbank bestehen nur, wenn eine Transaktion erfolgreich war. Bei Komplikationen wird die Transaktion abgebrochen, wodurch die an der Datenbank während der Transaktion vorgenommenen Änderungen rückgängig gemacht werden. Somit bieten Transaktionen einen gewissen Schutz von Anwendungs- und Systemfehlern. Dies ist ein wichtiger Aspekt für die fehlerfreie Gewährleistung der CRDT-Funktionalitäten.
-\subsection{idb}
-Die Event- und Callback-basierte Schnittstelle, welche IndexedDB bietet, führt dazu, dass sehr komplexer Code geschrieben werden muss um simple Operationen an der Datenbank durchzuführen \autocite{InproceedingsIDBdoof}. Um dieses Problem zu vermeiden und guten, lesbaren Code zu schreiben wird bei der Umsetzung des Prototypen auf die library idb zurückgegriffen. Bei idb handelt es sich um einen API-Wrapper, welche die API vereinfacht und Zugriff auf die Datenbank über JavaScript Promises anstelle von Events und Callbacks bietet. Listing \ref{lst:indexeddbexample} zeigt das erzeugen eines Object-Stores über die gewöhnliche IndexedDB API, in Listing \ref{lst:idbexample} ist die gleiche Aktion mit der idb API umgesetzt. Während in der gewöhnlichen Variante mit Callbacks weitergearbeitet werden muss, gibt die idb API mit \enquote{idb.open} ein Promise zurück.
-
-\begin{minipage}{\linewidth}
-\lstinputlisting[language=JavaScript, caption=IndexedDB: öffnen eines Object-Stores, label={lst:indexeddbexample}]{code/indexedexample.js}
-\end{minipage}
-
-\begin{minipage}{\linewidth}
-\lstinputlisting[language=JavaScript, caption={idb: öffnen eines Object-Stores}, label={lst:idbexample}]{code/idbexample.js}
-\end{minipage}
-
-\subsection{Node.js, Express.js, MongoDB}
-
-Obwohl die entwickelte CRDT Implementierung mit jeder Datenbank kompatibel ist, die Daten schreiben, lesen und suchen kann, wird zu demonstrativen Zwecken doch ein Node.js Server aufgesetzt der mit einer MongoDB Datenbank verbunden ist. Node.js ist eine JavaScript Laufzeitumgebung, welche gewöhnlich zum Betreiben von Webservern genutzt wird. Für das Bereitstellen der einzelnen Route wird, wie üblich, Express.js genutzt. Die Datenbank muss, wie in Sektion \ref{sec:Architektur} erläutert, nur eine Tabelle für das Speichern von Operationen verwalten. Als Beispiel wird hier eine MongoDB Datenbank mit Mongoose als Object Data Modeling library verwendet. Die Wahl fiel auf MongoDB weil es eine populäre Datenbank ist, funktionale Kriterien spielten bei der Wahl der Datenbank keine Rolle. 
-
-\subsection{Sonstiges}
-UUIDv4, google Roboto font, google material icons
 
 \section{Entwurf der Nutzeroberfläche}
 
 Aus den funktionalen Anforderungen lässt sich ein Entwurf für die Nutzeroberfläche des Prototypen erstellen. Abbildung \ref{fig:rezepteFrame} zeigt den Hauptbildschirm der Website. Hier kann der Nutzer Rezepte hinzufügen, löschen und die Namen der angelegten Rezepte bearbeiten. Der \enquote{Sync} Button initialisiert das Synchronisieren mit dem Server. Über den Knopf \enquote{Zutaten} gelangt der Nutzer zur Übersicht der Zutaten des jeweiligen Rezepts. Wie auf Abbildung \ref{fig:zutatenFrame} zu erkennen ist, kann der Nutzer hier neue Zutaten für das Rezept anlegen und bestehende Zutaten bearbeiten oder löschen. Darüber hinaus kann er jeder angelegten zutat eine Menge zuweisen, und auch diese bearbeiten. 
 
-\begin{figure}[h!]
+\begin{figure}[H]
 	\centering
 	\begin{minipage}{.45\textwidth}
 		\centering
 		\includegraphics[width=1\textwidth]{wireframeRezepte2.png}
-		\caption{\enquote{Hauptbildschirm}}
+		\caption{Entwurf Hauptbildschirm}
 		\label{fig:rezepteFrame}
 	\end{minipage}
 	\begin{minipage}{.45\textwidth}
 		\centering
 		\includegraphics[width=1\textwidth]{wireframeZutaten2.png}
-		\caption{\enquote{Übersicht Zutaten}}
+		\caption{Entwurf Übersicht Zutaten}
 		\label{fig:zutatenFrame}
 	\end{minipage}
 \end{figure}
 
+\subsection{Optimistic UI}
+\label{sec:optimisticUI}
+Wenn der User eine Änderung über die Nutzeroberfläche einleitet, bekommt er diese schon zu sehen, bevor die Änderung in der Datenbank gespeichert wurde. Diese Praxis nennt sich Optimistic UI und ist ein gängiges Mittel um die Usability in modernen Applikationen zu steigern \autocite{ArticleOptimisticUI}.
+
 
 
 \section{Datenstruktur}
+\label{sec:Datenstruktur}
 
 Diese Sektion beschreibt die Planung der Datenstruktur für den Prototypen. Erster Schritt dieser Planung ist es, zu ermittelt, welche Daten von der Datenstruktur verwaltet werden müssen und wie diese von der Applikation genutzt werden. Das Vorgehen ist, die Grundlagen der Datenstruktur erst in konventionellen Datentypen zu entwerfen und diese anschließend um CRDT Funktionalitäten zu erweitern. Dies bietet sich an da, CRDTs üblicherweise auf konventionellen Datentypen aufbauen und die Datenstruktur schließlich auf die Applikation zugeschnitten sein soll und nicht umgekehrt. Würde mit dem Entwurf des CRDT begonnen werden, bevor die Grundlagen der Applikation festgelegt sind, müsste sich die Applikation der Datenstruktur anpassen. Dies gilt es zu vermeiden, es sei denn die Rahmenbedingungen fordern aus anderen Gründen eine bestimmte Datenstruktur, was in dieser Arbeit jedoch explizit nicht der Fall ist. Ziel des Prototypen ist es, die Datenstruktur an die Applikation anzupassen. 
 
@@ -478,7 +459,7 @@ Listing \ref{lst:rezeptv1} zeigt die die Struktur eines Rezeptes als einzelnes J
 	\lstinputlisting[language=JavaScript, caption={Beispiel Rezept verschachtelt}, label={lst:rezeptv1}]{code/recipev1.js}
 \end{minipage} 
 
-Ein solches Modell ist nicht unüblich und gerade in JavaScript Anwendungen, weil Objekte in diesen oft verschachtelt sind, häufig praktisch. Beim Einsatz von CRDTs jedoch, lohnt es sich die Datenstruktur so flach wie möglich zu gestalten. Wir erinnern uns -- Ein CRDT baut auf normalen Datenstrukturen auf. Wenn es die Möglichkeit gibt, die Komplexität der ausgehenden Datenstruktur zu reduzieren, bedeutet dass auch eine Reduzierung an Komplexität für die zu implementierenden CRDT-Funktionalitäten.
+Ein solches Modell ist nicht unüblich und gerade in JavaScript Anwendungen, weil Objekte in diesen oft verschachtelt sind, häufig praktisch. Beim Einsatz von CRDTs jedoch, lohnt es sich die Datenstruktur so flach wie möglich zu gestalten. Wie in Sektion \ref{sec:crdts} beschrieben, bauen CRDTs auf normalen Datenstrukturen auf. Wenn es die Möglichkeit gibt, die Komplexität der ausgehenden Datenstruktur zu reduzieren, bedeutet dass auch eine Reduzierung an Komplexität für die zu implementierenden CRDT-Funktionalitäten.
 
 Eine Option, die Datenstruktur abzuflachen besteht darin, die in Listing \ref{lst:rezeptv1} gezeigten Daten zu normalisieren und somit relational abzubilden. In diesem Fall werden die Zutaten nicht als Array in dem Rezept verschachtelt, sondern werden einzeln gespeichert. Listing \ref{lst:rezeptv2} zeigt ein Rezept in der relationalen Modellierung, Listing \ref{lst:ingredientv2} eine dazugehörige Zutat. Die Verbindung zwischen Rezepten und Zutaten wird nun über die Eingenschaft \enquote{recipe} der Zutaten definiert. Hier wird die ID des Rezepts hinterlegt, welchem die Zutat zugehörig ist.
 
@@ -493,8 +474,8 @@ Eine Option, die Datenstruktur abzuflachen besteht darin, die in Listing \ref{ls
 \end{minipage}
 
 \subsection{Erweiterung zum CRDT}
-
-Währen sich bei konventionellen Datentypen nicht viel daran ändert, ob eine Zutat über \enquote{recipe.ingredient}, wie es in Listing \ref{lst:rezeptv1} der Fall wäre, oder \enquote{ingredient}, siehe Listing \ref{lst:rezeptv2} angesprochen wird, wäre die Umsetzung als CRDT in der verschachtelten Variante deutlich komplexer. Die Ursache dafür ist, dass die Änderungen an Zutaten schließlich auch von CRDT-Funktionalitäten profitieren sollten. Das Modell für ein Rezept müsste deshalb als CRDT entworfen werden, welches ein weiteres CRDT als Eigenschaft hält. Dies ist in der Umsetzung durchaus möglich, in diesem Fall aber leicht durch die relationale Herangehensweise zu vermeiden.
+\label{sec:erweiterungCRDT}
+Währen sich bei konventionellen Datentypen nicht viel daran ändert, ob eine Zutat über \enquote{recipe.ingredient}, wie es in Listing \ref{lst:rezeptv1} der Fall wäre, oder \enquote{ingredient}, vgl. Listing \ref{lst:rezeptv2} angesprochen wird, wäre die Umsetzung als CRDT in der verschachtelten Variante deutlich komplexer. Die Ursache dafür ist, dass die Änderungen an Zutaten schließlich auch von CRDT-Funktionalitäten profitieren sollten. Das Modell für ein Rezept müsste deshalb als CRDT entworfen werden, welches ein weiteres CRDT als Eigenschaft hält. Dies ist in der Umsetzung durchaus möglich, in diesem Fall aber leicht durch die relationale Herangehensweise zu vermeiden.
 
 Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, sondern eines was den Anforderungen der Anwendung gerecht wird, gilt es nun zu ermitteln, welche Schnittstellen es der Applikation zur Verfügung stellen muss. Aus der Anforderungsanalyse, welche in in Sektion \ref{sec:anforderungsanalyse} durchgeführt wurde, lassen sich die Anforderungen an das CRDT ableiten. Tabelle \ref{tab:crdtAnforderungen} fasst diese als Schnittstellen zusammen, welche die Datenstruktur der Applikation bereitstellen muss. 
 
@@ -516,7 +497,7 @@ Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, s
 	}
 \end{table}
 
-Die Umsetzung im Prototypen erfolgt durch ein \enquote{Operation-based} CRDT. Wie in Sektion \ref{sec:stateopbased} erläutert, werden alle Änderungen, welche an den Applikationsdaten erfolgen, einzeln als sogenannte Operationen abgespeichert. Wie Rezepte und Zutaten werden auch die Operationen über die IndexedDB API lokal im Browser gespeichert.
+Die Umsetzung im Prototypen erfolgt durch ein \enquote{Operation-based} CRDT. Wie in Sektion \ref{sec:stateopbased} erläutert, werden alle Änderungen, welche an den Applikationsdaten erfolgen, einzeln als Operationen abgespeichert. Wie Rezepte und Zutaten werden auch die Operationen über die IndexedDB API lokal im Browser gespeichert. Neben der Funktion zum Erzeugen von Operationen, muss das CRDT auch eine Funktion zum Anwenden der Operationen implementieren. 
 
 Listing \ref{lst:operationv1} zeigt eine Operation, welche beim Umbenennen des in Listing \ref{lst:rezeptv2} entworfenen Rezeptes erzeugt und gespeichert wird. Die Felder \enquote{store}, \enquote{object} und  \enquote{key} dienen der Identifikation des Wertes, der geändert werden soll, \enquote{value} beschreibt den neuen Wert. Die dargestellte Operation dokumentiert also, dass im Object-Store \enquote{recipes} der Wert des Schlüssels \enquote{name} vom Objekt \enquote{re\_ckdiw1bxw002411w66m7mol85s} zu \enquote{Tomaten-Paprika-Salat} geändert werden soll. Darüber hinaus erhält die Operation noch eine eigene ID und einen Zeitstempel. Der Zeitstempel dient dazu, eine konfliktfreie Synchronisation zu gewährleisten, mehr dazu im nächsten Abschnitt. 
 
@@ -530,55 +511,293 @@ Zwei Replikationen können sich synchronisieren, indem sie ihre gespeicherten Op
 
 Beim Anwenden der Operationen kann es vorkommen, dass zwei Operationen Änderungen am gleichen Wert vorgenommen haben. Für solche Fälle, genannt parallele Änderungen, müssen Regeln implementiert werden, um zu entscheiden, welche der parallelen Änderungen den Vorzug bekommt. Nur so ist gewährleistet, dass zwei Replikationen nach dem Synchronisieren auf dem gleichen Stand sind, wäre die Auswahl zufällig, oder würde sich stets die lokale Änderung durchsetzen, könnten die Applikationsdaten von einander abweichen. So wäre Konvergenz zwischen den Replikationen und somit \ac{SEC} nicht gewährleistet und der Einsatz von CRDTs überflüssig.
 
-Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt. Abbildung \ref{fig:flwochartOperationen} zeigt, wie entschieden wird, ob eine eingehende Operation angewendet wird. Zuerst wird überprüft, ob es für eine eingehende Operation, welche angewandt werden soll, bereits eine lokale Operationen gibt, welche den selben Wert betreffen. Ist dies der Fall, werden die Zeitstempel der aktuellsten lokalen Operation und der eingehenden Operationen verglichen. Ist die lokale Operation neuer als die eingehende Operation, wird die eingehende Operation ignoriert. Ist hingegen die eingehende Operation neuer, wird sie angewandt und anschließend, wie vorgesehen, zu den lokalen Operationen hinzugefügt.
+Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt. Abbildung \ref{fig:flwochartOperationen} zeigt, wie entschieden wird, ob eine eingehende Operation angewendet wird. Zuerst wird überprüft, ob es für eine eingehende Operation, welche angewandt werden soll, bereits eine lokale Operationen gibt, welche den selben Wert betreffen. Ist dies der Fall, werden die Zeitstempel der aktuellsten lokalen Operation und der eingehenden Operationen verglichen. Ist die lokale Operation neuer als die eingehende Operation, wird die eingehende Operation ignoriert. Ist hingegen die eingehende Operation neuer, wird sie angewandt und anschließend, wie vorgesehen, zu den lokalen Operationen hinzugefügt. Dies verhindert auch das mehrfache anwenden der selben Operation, wodurch das verarbeiten eingehender Operationen idempotent ist. Dies ist eine wichtige Eigenschaft für das CRDT (vgl. \ref{sec:kommuassoidem}). 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.6\textwidth]{flowchartOperationen.png}
-	\caption{\enquote{Bearbeiten einer eingehenden Operation}}
+	\caption{Bearbeiten einer eingehenden Operation}
 	\label{fig:flwochartOperationen}
 \end{figure}
 
 \subsection{Anwenden von Operationen}
+\label{sec:anwendenOperationen}
 
-Auch beim Anwenden von Operationen gilt es, einigen potentiellen Fehlern aus dem Weg zu Gehen. Da die Operationen kommutativ anwendbar sein sollen, kann es vorkommen, dass ein Objekt bearbeitet werden soll, welches lokal noch nicht existiert. Damit eine solche Änderung nicht verloren geht, wird das Objekt beim Anwenden der Änderung erstellt, sollte es noch nicht existieren. Wichtig hierbei ist, dass das neue Objekt keine zufällige ID zugewiesen bekommt, sondern die in der Operation hinterlegte ID des fehlenden Objektes. Anschließend kann die Operation wie vorgesehen auf das neue Objekt angewandt werden. Durch diese Semantik ist es möglich, die \enquote{Erstellen} und \enquote{Bearbeiten} Schnittstellen (siehe Tabelle \ref{tab:crdtAnforderungen}) mit der gleichen Methode umzusetzen. Eine Operation zum Erstellen eines Objektes wird einfach genau wie eine Operation zum Bearbeiten angelegt, statt einer bestehenden ID beim Bearbeiten wird jedoch eine neue ID erzeugt. Somit wird das Objekt beim Anwenden der Operation erzeugt, da es sich um eine unbekannte ID handelt. 
+Auch beim Anwenden von Operationen gilt es, einigen potentiellen Fehlern aus dem Weg zu Gehen. Da die Operationen kommutativ anwendbar sein sollen, kann es vorkommen, dass ein Objekt bearbeitet werden soll, welches lokal noch nicht existiert. Damit eine solche Änderung nicht verloren geht, wird das Objekt beim Anwenden der Änderung erstellt, sollte es noch nicht existieren. Wichtig hierbei ist, dass das neue Objekt keine zufällige ID zugewiesen bekommt, sondern die in der Operation hinterlegte ID des fehlenden Objektes. Anschließend kann die Operation wie vorgesehen auf das neue Objekt angewandt werden. Durch diese Semantik ist es möglich, die \enquote{Erstellen} und \enquote{Bearbeiten} Schnittstellen (vgl. Tabelle \ref{tab:crdtAnforderungen}) mit der gleichen Methode umzusetzen. Eine Operation zum Erstellen eines Objektes wird einfach genau wie eine Operation zum Bearbeiten angelegt, statt einer bestehenden ID beim Bearbeiten wird jedoch eine neue ID erzeugt. Somit wird das Objekt beim Anwenden der Operation erzeugt, da es sich um eine unbekannte ID handelt. 
 
-Ein weiterer Fehlerfall droht beim Entfernen von Rezepten und Zutaten, welches neben dem Anlegen und Bearbeiten auch eine weitere Schnittstellen zur Datenstruktur ist (siehe Tabelle \ref{tab:crdtAnforderungen}). Abbildung \ref{fig:rezeptLöschenSchlecht} zeigt die Problematik, welche auftritt wenn das Objekt tatsächlich aus der Datenbank gelöscht wird. Wird ein Objekt gelöscht und anschließend bearbeitet kommt die Applikation nicht auf den gleichen Stand wie wenn die Operationen in umgekehrter Reihenfolge angewandt werden. Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könnten sich nach dem Synchronisieren unterscheiden. 
+Ein weiterer Fehlerfall droht beim Entfernen von Rezepten und Zutaten, welches neben dem Anlegen und Bearbeiten auch eine weitere Schnittstellen zur Datenstruktur ist (vgl. Tabelle \ref{tab:crdtAnforderungen}). Abbildung \ref{fig:rezeptLöschenSchlecht} zeigt die Problematik, welche auftritt wenn das Objekt tatsächlich aus der Datenbank gelöscht wird. Wird ein Objekt gelöscht und anschließend bearbeitet kommt die Applikation nicht auf den gleichen Stand wie wenn die Operationen in umgekehrter Reihenfolge angewandt werden. Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könnten sich nach dem Synchronisieren unterscheiden. 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.66\textwidth]{deleteRecipeBad.png}
-	\caption{\enquote{Fehlerfall beim Entfernen eines Rezeptes}}
+	\caption{Fehlerfall beim Entfernen eines Rezeptes}
 	\label{fig:rezeptLöschenSchlecht}
 \end{figure}
 
-Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (siehe Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass Rezepte und Zutaten nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \enquote{tombstone}. Beim \enquote{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen, wie das Anlegen und Bearbeiten.
+Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass Rezepte und Zutaten nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \enquote{tombstone}. Beim \enquote{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen, wie das Anlegen und Bearbeiten.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language=JavaScript, caption={Beispiel Entfernen-Operation}, label={lst:operationv2}]{code/operationTombstone.js}
 \end{minipage}
 
 Listing \ref{lst:operationv2} zeigt, wie eine Entfernen-Operation ebenso Informationen über das Zielobjekt enthält. Der Angesprochene Schlüssel ist dabei immer \enquote{tombstone}, der Wert \enquote{1} indiziert, dass das Objekt als entfernt zu behandeln ist. Wäre eine Schnittstelle zum Reaktivieren des Objekts gewünscht, so könnte dies durch das ändern des \enquote{tombstone} Werts auf \enquote{0} umgesetzt werden. Abbildung \ref{fig:rezeptLöschenGut} zeigt, wie die Anwendung der vorher fehlerverursachenden Operationen durch die Nutzung des \enquote{tombstone} Indikators wieder Kommutativ ist.
-
+y
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.66\textwidth]{deleteRecipeGood.png}
-	\caption{\enquote{Korrektes Entfernen eines Rezeptes}}
+	\caption{Korrektes Entfernen eines Rezeptes}
 	\label{fig:rezeptLöschenGut}
 \end{figure}
 
 \section{Server}
 
-Diese Sektion beschreibt, wie der Server in der Architektur genutzt wird, um für das Verteilen von Operationen zu sorgen.
+Da die Replikationen im Client-Server Modell nicht direkt miteinander Kommunizieren können, ist es Aufgabe des Servers, dafür zu Sorgen, dass dennoch Operationen ausgetauscht werden können. Diese Sektion erläutert, wie der Server dazu genutzt wird, dass Clients indirekt miteinander kommunizieren können. 
+
+\subsection{Aufgabe des Servers}
+
+Voraussetzung eines \enquote{operation-based} CRDTs ist es, die erzeugten Operationen verlässlich an die anderen Replikationen des Systems, im Falle des Prototypen also die anderen Clients, zu verteilen (vgl. Sektion \ref{sec:crdts}). Deshalb dient der Server in der Umsetzung des Prototypen als eine Art Cloud-Speicher für Operationen, auf wessen Schnittstelle alle Clients Zugriff haben. 
 
 \subsection{API}
 
+Die Schnittstelle, welche der Server den Clients bereitstellt ist eine API mit genau einem Endpunkt. Bei diesem handelt es sich um eine POST Route, welche ein Array an eingehenden Operationen als HTTP-request akzeptiert. Nachdem die eingehenden Operationen vom Server verarbeitet wurden werden die lokalen Operationen des Servers als HTTP-response zurückgeschickt. 
+
 \subsection{Datenbank}
 
-\section{Schnittstellen}
+Eingehende Operationen werden unter den gleichen Konditionen in der Datenbank des Servers gespeichert, wie sie in \ref{fig:flwochartOperationen} beschrieben sind. Im Gegensatz zu dem Client wendet der Server jedoch keine Operationen an. Die Datenbank des Servers dient exklusiv der Speicherung von Operationen, Rezepte und Zutaten verwaltet er nicht. Dementsprechend muss die Datenbank des Servers keine weiteren Aufgaben erfüllen als das Lesen und Schreiben einer einzelnen Tabelle. 
+
+\subsection{Synchronisation}
+Um sich mit dem Server zu Synchronisieren schickt ein Client erst alle seine lokalen Operationen an den Server um anschließend alle auf dem Server gespeicherten Operationen als Antwort zu bekommen.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{syncDiagram2.png}
+	\caption{Synchronisieren über den Server}
+	\label{fig:syncDiagram}
+\end{figure}
+
+Abbildung \ref{fig:syncDiagram} demonstriert das Synchronisieren zweier Clients in vier Schritten. Diese lassen sich wie folgt beschreiben:
+
+\begin{description}
+	\item[Schritt 1] dokumentiert die Ausgangssituation. Beide Clients verfügen über unterschiedliche Operationen, während auf dem Server noch keine Operationen gespeichert sind. Für dieses Beispiel ist anzunehmen, dass Operationen A und B nicht die gleichen Werte bearbeiten wie Operationen X und Y.
+	\item[Schritt 2] zeigt die Synchronisation von Client 1 und dem Server. Zuerst schickt der Client seine Operationen an den Server, welcher diese speichert, da die Operationen zuvor nicht in seiner Datenbank existierten. Als Antwort schickt der Server seine Operationen zurück. Dies hat jedoch keinen Effekt auf die Daten des Clients, da die gleichen Operationen zurückkommen, welche sich schon in der lokalen Datenbank befinden. Beim bearbeiten eingehender Operationen (vgl. Abbildung \ref{fig:flwochartOperationen}), werden diese also ignoriert.
+	\item[Schritt 3] beschreibt die anschließende Synchronisation von Client 2 und dem Server. Client 2 initiiert diesen, indem er seine Operationen, X und Y, an den Server sendet. Der Server speichert diese, da sie noch nicht in seiner Datenbank vorhanden sind und die Operationen andere Werte betreffen als Operationen A und B, wie in Schritt 1 erläutert. Daraufhin antwortet der Server und schickt Sammlung seiner gespeicherten Operationen zurück. Beim bearbeiten der Operationen wendet Server 2 die neuen Operationen A und B an und speichert sie in seiner Datenbank. Operationen X und Y hingegen, werden ignoriert, da diese schon in der Datenbank des Clients vorhanden sind.
+	\item[Schritt 4] stellt dar, wie Client 1 sich erneut mit dem Server synchronisiert. Seit Schritt 1 hat sich auf dem Client nichts geändert, weshalb er die Synchronisation wieder mit dem Senden der Operationen A und B beginnt. Der Server kennt diese schon, fügt seiner Datenbank also keine Operationen hinzu und fährt fort indem er seine Operationen an den Client sendet. In der Antwort des Servers sind nun auch die Operationen von Client 2 enthalten, welche den Server in Schritt 3 erreichten. Anschließend wendet Client 1 die eingehenden neuen Operationen X und Y an und speichert sie in seiner Datenbank. Somit sind Client 1 und Client 2 auf dem gleichen Stand. 
+\end{description} 
+
+\chapter{Prototypische Realisierung}
+
+Dieses Kapitel beschreibt die Realisierung des Prototypen auf Basis des zuvor angefertigten Konzeptes. Zuerst wird auf die Wahl der bei der Umsetzung verwendeten Technologien eingegangen, anschließend folgen Erläuterungen zu den implementierten Funktionalitäten.
+
+\section{Wahl der verwendeten Technologien}
+\label{sec:Technologien}
+Es folgt eine kompakte Vorstellung der zur Umsetzung des Prototypen genutzten Technologien. Auch wird erläutert, warum die einzelnen Technologien verwendet werden und welchen Einfluss sie auf die Implementierung des Prototypen haben.
+
+\subsection{JavaScript, HTML und CSS}
+JavaScript ist eine Skriptsprache welche zur clientseitigen Programmierung von Websites genutzt wird. Mit einer Nutzung in über 95\% \autocite{OnlineJavascriptDistr} aller Websites ist sie aus dem Internet nicht wegzudenken. In den letzten Jahren gewannen auch Sprachen an Popularität, die zu JavaScript kompilieren, wie zum Beispiel TypeScript oder ClojureScript. Da JavaScript die Basis dieser Sprachen bildet und sich gut in diese Übersetzten lässt, ist eine Implementierung in der \enquote{Grundsprache} am besten dazu geeignet, die Anforderung eine anschaulichen und verständlichen Umsetzung zu erfüllen.
+\subsection{VueJS}
+\label{sec:vue}
+Da es sich beim Prototypen nicht um eine statische Website handelt, sondern oft Änderungen an der Nutzeroberfläche oder an den Applikationsdaten vorgenommen werden, bietet sich die Nutzung eines Frameworks, welches diese Interaktionen vereinfacht, an. 
+
+VueJS ist ein JavaScript Framework zum Erstellen von Benutzeroberflächen. Die Nutzung von VueJS erlaubt die Verknüpfung von HTML-Elementen mit Anwendungsdaten. So können HTML-Elemente automatisch aktualisiert werden, wenn sich ein Wert in einem Vue-Objekt ändert. Diese Verknüpfung macht auch Änderungen in die Umgekehrte Richtung möglich, also die Aktualisierung von Applikationsdaten bei Änderungen welche auf Seite der Nutzeroberfläche gemacht werden.
+
+Ein Feature von VueJS ist die Erzeugung von \enquote{components}. Hierbei handelt es sich um VueJS Instanzen, welche in HTML wiederverwendet werden können. Bei der Umsetzung des Prototypen wird die Komponenten-Bibliothek vue-material genutzt, um Zugriff auf einige vorgefertigte Komponenten wie Cards, Buttons und Eingabefelder zu haben. 
+\subsection{IndexedDB}
+IndexedDB ist eine Browser-API welche das clientseitige Speichern von Daten im Browser ermöglicht. Das bedeutet, dass über IndexedDB gespeicherte Daten auch offline zur Verfügung stehen. Die Nutzung der IndexedDB Schnittstelle bietet dem Prototypen die Funktionalität der Speicherung von Offline-Daten, welche für die Erfüllung der funktionalen Anforderungen rund um Offline-First-Eigenschaften essenziell ist. 
+
+Über sogenannte Object-Stores können JavaScript Objekte gespeichert und ausgelesen werden. Die Abfrage der Objekte erfolgt über einen der Werte des Objekts, welcher als Schlüssel konfiguriert wird. Alle Änderungen welche an der Datenbank vorgenommen werden, erfolgen in Transaktionen. Änderungen an der Datenbank bestehen nur, wenn eine Transaktion erfolgreich war. Bei Komplikationen wird die Transaktion abgebrochen, wodurch die an der Datenbank während der Transaktion vorgenommenen Änderungen rückgängig gemacht werden. Somit bieten Transaktionen einen gewissen Schutz von Anwendungs- und Systemfehlern. Dies ist ein wichtiger Aspekt für die fehlerfreie Gewährleistung der CRDT-Funktionalitäten.
+\subsection{idb}
+\label{sec:idb}
+Die Event- und Callback-basierte Schnittstelle, welche IndexedDB bietet, führt dazu, dass sehr komplexer Code geschrieben werden muss um simple Operationen an der Datenbank durchzuführen \autocite{InproceedingsIDBdoof}. Um dieses Problem zu vermeiden und guten, lesbaren Code zu schreiben wird bei der Umsetzung des Prototypen auf die JavaScript-Bibliothek idb zurückgegriffen. Bei idb handelt es sich um einen API-Wrapper, welche die API vereinfacht und Zugriff auf die Datenbank über JavaScript Promises anstelle von Events und Callbacks bietet. Listing \ref{lst:indexeddbexample} zeigt das Erzeugen eines Object-Stores über die gewöhnliche IndexedDB API, in Listing \ref{lst:idbexample} ist die gleiche Aktion mit der idb API umgesetzt. Während in der gewöhnlichen Variante mit Callbacks weitergearbeitet werden muss, gibt die idb API mit \enquote{idb.open} ein Promise zurück.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption=IndexedDB: öffnen eines Object-Stores, label={lst:indexeddbexample}]{code/indexedexample.js}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language=JavaScript, caption={idb: öffnen eines Object-Stores}, label={lst:idbexample}]{code/idbexample.js}
+\end{minipage}
+
+\subsection{Node.js, Express.js, MongoDB}
+chr
+Obwohl die entwickelte CRDT Implementierung mit jeder Datenbank kompatibel ist, die Daten schreiben, lesen und suchen kann, wird zu demonstrativen Zwecken doch ein Node.js Server aufgesetzt der mit einer MongoDB Datenbank verbunden ist. Node.js ist eine JavaScript Laufzeitumgebung, welche gewöhnlich zum Betreiben von Webservern genutzt wird. Für das Bereitstellen der einzelnen Route wird, wie üblich, Express.js genutzt. Die Datenbank muss, wie in Sektion \ref{sec:Architektur} erläutert, nur eine Tabelle für das Speichern von Operationen verwalten. Als Beispiel wird hier eine MongoDB Datenbank mit Mongoose als Object Data Modeling Bibliothek verwendet. Die Wahl fiel auf MongoDB weil es eine populäre Datenbank ist, funktionale Kriterien spielten bei der Wahl der Datenbank keine Rolle. 
+
+\subsection{Sonstige Bibliotheken und Resourcen}
+
+\begin{description}
+	\item[CUID] Die Bibliothek CUID wird zum generieren der IDs von Rezepten, Zutaten und Operationen genutzt. Die IDs, welche als Primärschlüssel in den Datenbanken dienen, müssen einzigartig sein. Für diesen Zweck ist CUID in der Lage, kurze Strings zu Erzeugen, welche mit Client-Fingerabduck, Timestamp, Counter und einer zufälligen Komponente aus mehreren kollisionsresistenten Elementen bestehen.
+	\item[Roboto Font und Marterial Icons] Als Ergänzung zu den Verwendeten vue-material Komponenten werden die Schrift Roboto und die SVG-Icons Material Icons von Google genutzt. Diese Assets sind komplett kosmetisch, sie passen schlicht gut zu den verwendeten Komponenten.
+	\item[cors] Das node.js Paket cors wird genutzt, um \ac{CORS} zwischen Client und Server zu ermöglichen.
+\end{description}
+
+\subsection{Ordnerstruktur}
+
+Abbildung \ref{fig:ordnerstruktur} zeigt die Ordnerstruktur des Clients. Neben den für Webanwendungen üblichen Bestandteilen Template (index.html) und Stylesheet (app.css), ist die JavaScript Komponente des Prototypen in drei Dateien aufgeteilt. Sinn dieser Aufteilung ist es, die implementierten Funktionalitäten thematisch zu ordnen, einen praktischen Nutzen hat sie nicht. In app.js befinden sich Daten und Funktionalitäten welche das Frontend betreffen. Die Datei crdt.js umfasst die Schnittstellen und Logik des implementierten CRDTs. In database.js befinden sich die Methoden, welche zum Zugriff auf die IndexedDB Datenbank umgesetzt wurden. 
+
+Der implementierte Service-Worker befindet sich in sw.js. Darüber hinaus enthält der Client noch die Bibliothek idb.js. Die weiteren genutzten externen Resourcen Vue.js, vue-material, CUID, Material Icons und die Roboto-Schrift werden über für prototypische Entwicklung übliche Content Delivery Networks in der index.html geladen.
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{.3\textwidth}
+		\dirtree{%
+			.1 crdt-app.
+			.2 index.html.
+			.2 app.js.
+			.2 crdt.js.
+			.2 database.js.
+			.2 app.css.
+			.2 sw.js.
+			.2 ext.
+			.3 idb.js.
+		}
+	\end{minipage}
+	\caption{Ordnerstruktur des Clients}
+	\label{fig:ordnerstruktur}
+\end{figure}
+
+	
+\section{Nutzeroberfläche}
+
+Die Nutzung von Vue.js ermöglicht die Erzeugung sogenannter Vue Instanzen. Diese Instanzen dienen dem Template als eine Art interaktives Viewmodel (vgl. Sektion \ref{sec:vue}). Im Prototypen wird eine Instanz zur Darstellung der gesamten Applikation mit dem Namen \enquote{app} erzeugt. Weitere Komponenten werden aus der Bibliothek vue-material genutzt.
+
+Listing \ref{lst:htmlrecipes} zeigt, wie die Verwendung von Vue.js eine Verbindung von Anzeige und Applikationsdaten ermöglicht. Mit der Direktive \enquote{v-for} wird für jedes Rezept, welches sich in der visibleRecipes Eigenschaft der \enquote{app} Instanz befindet, ein <md-card> Block erzeugt. Bei <md-card> handelt es sich um eine vue-material Komponente. Innerhalb dieser Komponente kann nun auf die Eigenschaften des verbundenen Rezeptes zugegriffen werden. In diesem Fall wird beispielsweise der Name des jeweiligen Rezeptes als Titel der Komponente gesetzt.
+
+Eine weitere Funktionalität, die Vue.js zur Verfügung stellt ist \enquote{v-on:click}. Hierbei handelt es sich um einen Klick-Event-Listener welcher direkt in ein HTML-Element geschrieben werden kann. Der Wert der Direktive definiert, welche Funktion ausgeführt wird, wenn auf das Element geklickt wurde. In Listing \ref{lst:htmlrecipes} ist zu sehen, wie so das Bearbeiten des Rezeptnamens (vgl. Zeile 7), das Löschen des Rezeptes (vgl. Zeile 11) und die Verlinkung zu den Zutaten des Rezeptes (vgl. Zeile 16) gesteuert werden. An jede der hier über \enquote{v-on:click} aufgerufenen Methoden wird das Rezept, mit welchem die Komponente verbunden ist, als Parameter übergeben. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Html5, caption={HTML-Code der Rezepteliste}, label={lst:htmlrecipes}]{code/recipelist.html}
+\end{minipage}
+
+Neben der Auflistung an Rezepten verfügt die Hauptansicht der Applikation noch über ein Dialogfeld zum Anlegen der Rezepte und einen Button zum Synchronisieren der Applikationsdaten mit dem Server (vgl. Abbildung \ref{fig:uiMainSmall}). In der Zutatenübersicht eines Rezeptes (vgl. Abbildung \ref{fig:uiIngredientsSmall}) lassen sich Zutaten anlegen, Namen und Mengen bearbeiten und Zutaten löschen.
+
+\begin{figure}[H]
+	\begin{minipage}{.45\textwidth}
+		\fbox{\includegraphics[width=1\textwidth]{uiMainSmall.png}}
+		\caption{Hauptbildschirm}
+		\label{fig:uiMainSmall}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{.45\textwidth}
+		\fbox{\includegraphics[width=1\textwidth]{ingredientsUISmall.png}}
+		\caption{Übersicht Zutaten}
+		\label{fig:uiIngredientsSmall}
+	\end{minipage}
+\end{figure}
+
+\section{Service Worker}
+
+Der Service Worker ermöglicht, dass der Prototyp nach dem ersten Laden der Applikation auch offline nutzbar ist. Hierzu werden alle Dateien, aus welchen der Client besteht, bei der Installation des Service Workers gecached (vgl. Listing \ref{lst:swinstall}. Die zu speichernden Resourcen werden dabei als Parameter angegeben (vgl. Listing \ref{lst:swparameters}). Die Installation des Service Workers findet immer dann Statt, wenn die Website geöffnet wird und noch kein Service Worker vorhanden ist.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Installation des Service Workers}, label={lst:swinstall}]{code/sw-install.js}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Parameter zur Installation des Service Workers}, label={lst:swparameters}]{code/sw-parameters.js}
+\end{minipage}
+
+Das Bereitstellen der Dateien aus dem Cache erfolgt über das Abfangen von Netzwerk-Requests. Das fetch Event, für welches der in Listing \ref{lst:sw-intercept} dargestellte Event Listener registriert wird, feuert jedes mal, wenn eine Resource im Anwendungsbereich\footnote{Im Fall des Prototypen umfasst der Anwendungsbereich die gesamte Applikation} des Service Workers aus dem Netzwerk abgerufen werden soll. Dies bezieht sich sowohl auf Dokumente innerhalb des Anwendungsbereiches, wie die bei der Initialisierung gecacheten Dateien, als auch auf \enquote{fetch} Requests an externe Resourcen.
+
+Wenn der Service Worker einen Request zum Synchronisieren abfängt, wird der Request nie vom Cache bedient, sondern immer an das Netzwerk weitergeleitet, wie im if-Block von Listing \ref{lst:swintercept} zu erkennen ist. Eine Synchronisierung muss schließlich stets mit neuen Daten erfolgen, ein erneutes Synchronisieren mit alten Daten hätte keine Auswirkung. Wenn keine Netzwerkverbindung besteht funktioniert das Synchronisieren also auch nicht.
+
+Um das Laden der Applikation so schnell wie möglich zu gestalten, ist der Service Worker für alle anderen Requests so konfiguriert, dass er eine \enquote{Cache dann Netzwerk} Strategie (vgl. Sektion \ref{sec:cachedannnetzwerk}) verfolgt. Im else-Block wird überprüft, ob sich die zum Request passende Response bereits im Cache befindet. Nur wenn dies nicht der Fall ist, wird der Request über das Netzwerk bearbeitet.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Service Worker: Abfangen von Requests}, label={lst:swintercept}]{code/sw-interceptRequests.js}
+\end{minipage}
+
+Im Prototypen ist dieses Verhalten wie folgt umgesetzt: 
+Beim aufrufen der Webseite werden alle lokal gespeicherten Applikationen aus der Datenbank geladen, und in zwei lokalen Variablen, \enquote{recipes} und \enquote{recipes}, der \enquote{app} Instanz gespeichert. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Laden aller Rezepte und Zutaten}, label={lst:loaduidata}]{code/updateAllUI.js}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={loadUIData Methode}, label={lst:loaduidata}]{code/updateUI.js}
+\end{minipage}
+
+
+
+\section{Lokales Speichern über die IndexedDB API}
+\label{sec:lokalesIndexeddb}
+
+Über die IndexedDB Schnittstelle müssen drei verschiedene Sätze an Daten lokal gespeichert werden: Rezepte, Zutaten und Operationen (vgl. Sektion \ref{sec:Datenstruktur}). Die Datensätze werden jeweils in einem eigenen ObjectStore in der Datenbank gespeichert. Listing \ref{lst:idbOpen} zeigt die Variable \enquote{idbPromise}, welche bei allen Zugriffen auf die Datenbank genutzt wird. Wie in Sektion \ref{sec:idb} erklärt, wird statt der üblichen IndexedDB API die Promise-basierte Schnittstelle der idb.js Bibliothek genutzt. Beim jedem Zugriff auf die Datenbank wird geprüft, ob die ObjectStores bereits erstellt sind. Wenn dies nicht der Fall ist, werden sie angelegt. Nach erfolgreichem öffnen der Datenbank, gibt das Promise ein Objekt zurück, mit welchem Transaktionen an der Datenbank ausgeführt werden können.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Öffnen der IndexedDB Datenbank}, label={lst:idbOpen}]{code/idbOpen.js}
+\end{minipage}
+
+Somit können anschließend Zugriffe wie das Speichern von Objekten (vgl. Listing \ref{lst:saveObject}) oder das Abrufen aller Objekte eines ObjectStores (vgl. Listing \ref{lst:getAllFromStore}) erfolgen. Der Ablauf folgt dabei stets dem gleichen Muster. Zu Beginn wird die Datenbank mit dem \enquote{idbPromise} geöffnet, woraufhin eine Transaktion für den gewünschten ObjectStore erzeugt wird. Über die Transaktion ist schließlich der ObjectStore verfügbar, an welchem dann Daten ausgelesen oder geschrieben werden können.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Speichern eines Objektes im ObjectStore}, label={lst:saveObject}]{code/saveObject.js}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Abrufen aller Objekte eines ObjectStores}, label={lst:getAllFromStore}]{code/getAllFromStore.js}
+\end{minipage}
+
+\section{Generieren der Operationen}
+
+Wie in Sektion  \ref{sec:erweiterungCRDT} beschrieben, muss das CRDT über Methoden zum Generieren und Anwenden von Operationen verfügen. Welche Operationen generiert werden dürfen, ergibt sich aus den Anforderungen der Applikation. In der Konzeption (vgl. Tabelle \ref{tab:crdtAnforderungen}) wurden diese Anforderungen für den Prototypen definiert. Sie Umfassen das Anlegen, Löschen und Bearbeiten von Rezepten und Zutaten. Da sich die Operationen zum Anlegen und Bearbeiten nicht unterscheiden müssen (vgl. Sektion \ref{sec:anwendenOperationen}) und das Löschen eines Objekts über das bearbeiten des Tombstone Werts erfolgt, können alle drei Anforderungen über eine Methode erfüllt werden, die in Listing \ref{lst:generateUpdateOperation} aufgeführt ist. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Funktion zum Generieren einer Operation}, label={lst:generateUpdateOperation}]{code/generateUpdateOperation.js}
+\end{minipage}
+
+Folgende Parameter müssen zum Generieren einer Operation übergeben werden: 
+\begin{description}[leftmargin=!,labelwidth=\widthof{\bfseries store: }]
+	\item [\textit{store:} ] Der ObjectStore, in dem sich das zu bearbeitende Objekt befindet. Im implementierten Prototypen gibt es die ObjectStores \enquote{recipes} und \enquote{ingredients}
+	\item [\textit{Id:} ] Die ID des Objektes, auf welches die Operation angewendet werden soll. Beim Anlegen eines Objekts, muss zuvor eine neue CUID generiert werden 
+	\item [\textit{key:} ] Der Key des Wertes, der Bearbeitet werden soll, z.B. \enquote{name}
+	\item [\textit{value:} ] Der neue Wert
+\end{description}
+
+Neben dem Mapping der übergebenen Parameter erzeugt die Methode noch einen aktuellen Zeitstempel und eine eigene CUID, zum identifizieren der Operation. Der Zeitstempel wird über die JavaScript Methode Date.now() erstellt, welche die Anzahl der vergangenen Millisekunden seit dem 01.01.1970 zurückgibt. Die Date.now() Methode orientiert sich an der Systemuhr des Clients, zu welcher es keine Garantie gibt, dass sie korrekt eingestellt ist. In Rahmen der Entwicklung einer Anwendung, welche über einen Prototypen hinaus geht, sollten andere Methoden zur Erzeugung eines Zeitstempels genutzt werden, wie zum Beispiel die Implementierung einer Logischen Uhr, oder einer \ac{HLC}. Da das Vergleichen der Zeitstempel sich dabei jedoch nicht verändert, wurde aufgrund des begrenzten Umfangs und Zeitfensters bei der Implementierung des Prototypen auf die Umsetzung einer solchen Uhr verzichtet.
+
+\section{Verarbeiten der Operationen}
+
+Unabhängig davon, ob Operationen selbst erzeugt werden oder über das Synchronisieren in die Applikation gelangen, werden sie konstant mit der gleichen Methode verarbeitet. Operationen, die angewendet werden sollen werden als \textit{eingehende Operationen} bezeichnet, die bestehenden gespeicherten Operationen als \textit{lokale Operationen}.
+
+Aufgrund der Länge der Methode zum verarbeiten von Operationen, wird diese in der folgenden Beschreibung in drei Schritte unterteilt. Der Vorgang beginnt mit dem Laden der lokalen Operationen. Mithilfe dieser Operationen wird anschließend gefiltert, welche der eingehenden Operationen angewandt werden können. Schlussendlich werden die gefilterten Operationen Angewendet.
+
+%TODO Kurze einleitung ok hier?
+\subsection{Lokale Operationen laden}
+
+Der Erste Schritt im verarbeiten von Operationen ist das Laden der lokalen Operationen. Wie Listing \ref{lst:processOperations1} zeigt, erfolgt dies nur, wenn eingehende Operationen vorhanden sind. Das Laden erfolgt mit der im vorherigen Abschnitt (vgl. \ref{sec:lokalesIndexeddb}) beschriebenen Funktion \textit{getAllFromStore}. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Schritt 1}, label={lst:processOperations1}]{code/processOperations1.js}
+\end{minipage}
+
+Nachdem die lokalen Operationen geladen sind, wird mit der Methode \textit{mapOperations} (vgl. Listing \ref{lst:mapOperations}) noch eine Vorkehrung für das Filtern im nächsten Schritt getroffen. \textit{mapOperations} gibt ein Promise zurück, welches bei Erfolg wiederum ein \textit{Map} Objekt zurückgibt. Eine \textit{Map} wird verwendet, da sie das Setzen von Objekten als Keys ermöglicht.
+
+Die Methode beginnt mit der Erzeugung eines leeren \textit{Map} Objekts, und der Sortierung der lokalen Operationen. Die Sortierung erfolgt nach den Zeitstempeln, wobei die aktuellsten Operationen, also die mit dem höchsten Zeitstempel, am Anfang des Arrays platziert werden. 
+
+Anschließend wird für jede der eingehenden Operationen eine passende lokale Operation gesucht. Eine Operation ist \enquote{passend}, wenn sie den gleichen Wert wie die eingehende Operation bearbeitet. Durch das vorherige Sortieren der lokalen Operationen wird gesichert, dass die erste gefundene passende Operation stets die neuste ist.
+
+Daraufhin werden die eingehende Operation und die passende, lokale Operation zu der zuvor initialisierten \textit{Map} hinzugefügt. Die eingehende Operation wird als Schlüssel gesetzt, die lokale Operation als Wert. Wenn keine passende lokale Operation gefunden wird, ist der Wert \textit{undefined}. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Mappen der eingehenden Operationen zu passenden, lokalen Operationen}, label={lst:mapOperations}]{code/mapOperations.js}
+\end{minipage}
+
+\subsection{Operationen filtern}
+
+\subsection{Operationen anwenden}
+
+
+\section{Server}
+	\subsection{Express.js Schnittstelle}
+	\subsection{MongoDB Datenbank}
+
+
+
+
+
+
 \newpage
 \printbibliography
-
 
 
 \end{document}]
