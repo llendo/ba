@@ -1,5 +1,5 @@
 [...]
 .then((mappedOperations) => {
-    return filterOperationsToApply(mappedOperations);
+  return filterOperationsToApply(mappedOperations);
 })
 [...]

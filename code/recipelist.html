@@ -1,21 +1,21 @@
 <md-card v-for="recipe in visibleRecipes" :key="recipe._id" :data-id="recipe._id">
-    <md-card-header>
-    <div class="nowrap">
-        <div class="md-title">
-        {{ recipe.name }}
-        </div>
-        <md-button class="md-icon-button md-dense md-primary md-raised" v-on:click="onClickEditRecipeTitle(recipe)">  
-        <md-icon>edit</md-icon>
-        </md-button>  
+  <md-card-header>
+  <div class="nowrap">
+    <div class="md-title">
+    {{ recipe.name }}
     </div>
-    <md-button class="md-icon-button md-dense md-warn md-raised" v-on:click="onClickDeleteRecipe(recipe)">  
-        <md-icon>delete</md-icon>
-    </md-button>
-    </md-card-header>
-    <md-card-actions>
-    <md-button class="md-primary md-raised" v-on:click="onClickRecipe(recipe)">
-        Ingredients
-        <md-icon>chevron_right</md-icon>
-    </md-button>
-    </md-card-actions>
+    <md-button class="md-icon-button md-dense md-primary md-raised" v-on:click="onClickEditRecipeTitle(recipe)">  
+    <md-icon>edit</md-icon>
+    </md-button>  
+  </div>
+  <md-button class="md-icon-button md-dense md-warn md-raised" v-on:click="onClickDeleteRecipe(recipe)">  
+    <md-icon>delete</md-icon>
+  </md-button>
+  </md-card-header>
+  <md-card-actions>
+  <md-button class="md-primary md-raised" v-on:click="onClickRecipe(recipe)">
+    Ingredients
+    <md-icon>chevron_right</md-icon>
+  </md-button>
+  </md-card-actions>
 </md-card>

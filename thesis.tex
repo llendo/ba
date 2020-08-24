@@ -34,6 +34,8 @@
 			{ü}{{\"u}}1,%
 }
 
+\interfootnotelinepenalty=10000
+
 
 
 \usepackage[
@@ -359,24 +361,24 @@ Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu en
 Üblich in einer Anforderungsanalyse ist, die Anforderungen in \enquote{kann}, \enquote{soll} und \enquote{muss} Kategorien einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf \enquote{muss} Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essentiell für das System sind.
 
 \begin{description}
-	\item[Anlegen von Rezepten]
+	\item[{[A 01]}Anlegen von Rezepten]
 	Nutzer sollen Rezepte anlegen können. Ein Rezept hat einen Namen und eine Liste an Zutaten. 
-	\item[{[FA 1]} Anlegen von Zutaten]
+	\item[{[A 02]} Anlegen von Zutaten]
 	Die Nutzer sollen in der Lage sein, Zutaten zu einem Rezept hinzuzufügen. Zutaten haben einen Namen und eine Mengenangabe, welche die Nutzer setzten können.
-	\item[Bearbeiten und Löschen]
+	\item[{[A 03]}Bearbeiten und Löschen]
 	Den Nutzern soll es möglich sein, Rezepte und Zutaten zu bearbeiten und zu löschen. 
-	\item[{[FA 2]} Zugriff mit mehreren Endgeräten gleichzeitig]
+	\item[{[A 04]} Zugriff mit mehreren Endgeräten gleichzeitig]
 	Nutzer sollen in der Lage sein, mit mehreren Geräten gleichzeitig auf die gleiche Applikation zuzugreifen.
-	\item[{[FA 3]} Offline-Erreichbarkeit]
+	\item[{[A 05]} Offline-Erreichbarkeit]
 	Nutzer der Anwendung müssen in der Lage sein, die Anwendung offline zu nutzen. Der Funktionsumfang der Applikation soll dadurch nicht beeinflusst werden. 
-	\item[{[FA 4]} Lokales Speichern]
+	\item[{[A 06]} Lokales Speichern]
 	Die Anwendung muss über die Funktionalität verfügen, Änderungen von Nutzern lokal zu speichern, damit diese auch zur Verfügung stehen wenn keine Verbindung zum Netzwerk besteht.
-	\item[Online Speichern]
+	\item[{[A 07]}Online Speichern]
 	Die Anwendungsdaten sollen nicht exklusiv lokal, sondern auch im Internet gespeichert werden können. Das Speichern der Daten erfolgt sinngemäß auf einem Server. 
-	\item[{[FA 5]} Synchronisierung von Daten]
+	\item[{[A 08]} Synchronisierung von Daten]
 	Änderungen des Nutzers müssen mit dem Server synchronisiert werden können, wenn eine Verbindung zum Internet besteht. Der Nutzer sollte niemals seine offline umgesetzten Änderungen verlieren.
-	\item[\ac{SEC}] Nachdem sich zwei Nutzer mit dem Stand des jeweils anderen Nutzers synchronisiert haben, müssen beide Applikationen den gleichen Stand haben.
-	\item[{[FA 6] Konfliktfreies Synchronisieren}] Das Synchronisieren der Daten soll ohne Konflikte erfolgen. 
+	\item[{[A 09]} \ac{SEC}] Nachdem sich zwei Nutzer mit dem Stand des jeweils anderen Nutzers synchronisiert haben, müssen beide Applikationen den gleichen Stand haben.
+	\item[{{[A 10]} Konfliktfreies Synchronisieren}] Das Synchronisieren der Daten soll ohne Konflikte erfolgen. 
 \end{description}
 
 
@@ -384,11 +386,11 @@ Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität zu en
 Während die funktionalen Anforderungen direkt Bezug auf die Funktionalität des Prototypen nehmen, werden zusätzlich sogenannte nicht-funktionale Anforderungen definiert, um die Rahmenbedingungen des Projekts einzuschränken. Diese beziehen sich nicht auf die konkreten Funktionen, sondern beschreiben stattdessen Ziele, welche die Umsetzung des Prototypen über die Funktionalität hinaus hat. 
 
 \begin{description}
-	\item[{[NFA 1]} Anschauliche Umsetzung: Code]
+	\item[{[A 11]} Anschauliche Umsetzung: Code]
 	Ein Ziel der Arbeit ist, zu ermitteln, wie CRDTs in modernen Webanwendungen umgesetzt werden können (vgl. \ref{sec:Problemfeld}). Da sich moderne Offline-First Anwendungen leider nicht in auf ein einziges Beispiel reduzieren lassen, ist bei der Umsetzung darauf zu achten die Datenstruktur so anschaulich und verständlich wie möglich zu implementieren. Dies bedeutet beispielsweise, Lesbarkeit über Effizienz beim schreiben von Programmcode zu priorisieren.
-	\item[{[NFA 2]} Anschauliche Umsetzung: Technologien]
+	\item[{[A 12]} Anschauliche Umsetzung: Technologien]
 	Um das in NFA 1 formulierte Ziel der Anschaulichkeit weiter zu verfolgen, soll auch die Wahl der Technologien so erfolgen, dass diese soll die Ebene der Datenstruktur in Javascript umgesetzt werden. Auch wenn Entwicklern heutzutage zahlreiche Sprachen zur Verfügung stehen, welche zu Javascript kompilieren, bleibt Javascript aufgrund der hohen Verbreitung die für demonstrative Zwecke geeignetste Sprache.
-	\item[{[NFA 3]} Unabhängigkeit von Datenbank-Technologien]
+	\item[{[A 13]} Unabhängigkeit von Datenbank-Technologien]
 	Die implementierte Datenstruktur muss unabhängig von der benutzten Datenbank sein. Keine der umgesetzten CRDT-Funktionalitäten darf von der gewählten Datenbank abhängig sein.
 \end{description}
 
@@ -554,6 +556,7 @@ y
 Da die Replikationen im Client-Server Modell nicht direkt miteinander Kommunizieren können, ist es Aufgabe des Servers, dafür zu Sorgen, dass dennoch Operationen ausgetauscht werden können. Diese Sektion erläutert, wie der Server dazu genutzt wird, dass Clients indirekt miteinander kommunizieren können. 
 
 \subsection{Aufgabe des Servers}
+\label{sec:AufgabeServer}
 
 Voraussetzung eines \enquote{operation-based} CRDTs ist es, die erzeugten Operationen verlässlich an die anderen Replikationen des Systems, im Falle des Prototypen also die anderen Clients, zu verteilen (vgl. Sektion \ref{sec:crdts}). Deshalb dient der Server in der Umsetzung des Prototypen als eine Art Cloud-Speicher für Operationen, auf wessen Schnittstelle alle Clients Zugriff haben. 
 
@@ -566,6 +569,7 @@ Die Schnittstelle, welche der Server den Clients bereitstellt ist eine API mit g
 Eingehende Operationen werden unter den gleichen Konditionen in der Datenbank des Servers gespeichert, wie sie in \ref{fig:flwochartOperationen} beschrieben sind. Im Gegensatz zu dem Client wendet der Server jedoch keine Operationen an. Die Datenbank des Servers dient exklusiv der Speicherung von Operationen, Rezepte und Zutaten verwaltet er nicht. Dementsprechend muss die Datenbank des Servers keine weiteren Aufgaben erfüllen als das Lesen und Schreiben einer einzelnen Tabelle. 
 
 \subsection{Synchronisation}
+
 Um sich mit dem Server zu Synchronisieren schickt ein Client erst alle seine lokalen Operationen an den Server um anschließend alle auf dem Server gespeicherten Operationen als Antwort zu bekommen.
 
 \begin{figure}[H]
@@ -755,45 +759,158 @@ Folgende Parameter müssen zum Generieren einer Operation übergeben werden:
 
 Neben dem Mapping der übergebenen Parameter erzeugt die Methode noch einen aktuellen Zeitstempel und eine eigene CUID, zum identifizieren der Operation. Der Zeitstempel wird über die JavaScript Methode Date.now() erstellt, welche die Anzahl der vergangenen Millisekunden seit dem 01.01.1970 zurückgibt. Die Date.now() Methode orientiert sich an der Systemuhr des Clients, zu welcher es keine Garantie gibt, dass sie korrekt eingestellt ist. In Rahmen der Entwicklung einer Anwendung, welche über einen Prototypen hinaus geht, sollten andere Methoden zur Erzeugung eines Zeitstempels genutzt werden, wie zum Beispiel die Implementierung einer Logischen Uhr, oder einer \ac{HLC}. Da das Vergleichen der Zeitstempel sich dabei jedoch nicht verändert, wurde aufgrund des begrenzten Umfangs und Zeitfensters bei der Implementierung des Prototypen auf die Umsetzung einer solchen Uhr verzichtet.
 
-\section{Verarbeiten der Operationen}
+\section{Verarbeiten von Operationen}
+\label{sec:processOperations}
 
-Unabhängig davon, ob Operationen selbst erzeugt werden oder über das Synchronisieren in die Applikation gelangen, werden sie konstant mit der gleichen Methode verarbeitet. Operationen, die angewendet werden sollen werden als \textit{eingehende Operationen} bezeichnet, die bestehenden gespeicherten Operationen als \textit{lokale Operationen}.
+Unabhängig davon, ob Operationen selbst erzeugt werden oder die Applikation über das Synchronisieren erreichen, werden sie konstant mit der gleichen Methode, \textit{processOperations}, verarbeitet. Es wäre zwar angemessen davon auszugehen, dass eine gerade eben selbst erstellte Operation immer neuer ist als andere Operationen, und somit immer angewendet werden muss. Ein sofortiges Anwenden solcher Operationen würde jedoch ein Risiko, denn auf einmal gäbe es zwei Methoden zum Anwenden von Operationen, welche laut CRDT Anforderung beide immer das gleiche Ergebnis liefern müssten. Wenn es nur eine universelle Funktion zum Anwenden von Operationen gib, ist hingegen sichergestellt, dass die Operation auf allen Clients gleichermaßen angewendet wird. Eine wichtige Garantie, um \ac{SEC} zwischen den Replikationen herzustellen.
 
-Aufgrund der Länge der Methode zum verarbeiten von Operationen, wird diese in der folgenden Beschreibung in drei Schritte unterteilt. Der Vorgang beginnt mit dem Laden der lokalen Operationen. Mithilfe dieser Operationen wird anschließend gefiltert, welche der eingehenden Operationen angewandt werden können. Schlussendlich werden die gefilterten Operationen Angewendet.
+Operationen, die angewendet werden als \textit{eingehende Operationen} bezeichnet, die bestehenden gespeicherten Operationen als \textit{lokale Operationen}.
+
+Aufgrund der Länge der \textit{processOperations} Methode, wird diese in der folgenden Beschreibung in drei Schritte unterteilt. Der Vorgang beginnt mit dem Laden der lokalen Operationen. Mithilfe dieser Operationen wird anschließend gefiltert, welche der eingehenden Operationen angewandt werden können. Schlussendlich werden die gefilterten Operationen Angewendet.
 
 %TODO Kurze einleitung ok hier?
 \subsection{Lokale Operationen laden}
 
-Der Erste Schritt im verarbeiten von Operationen ist das Laden der lokalen Operationen. Wie Listing \ref{lst:processOperations1} zeigt, erfolgt dies nur, wenn eingehende Operationen vorhanden sind. Das Laden erfolgt mit der im vorherigen Abschnitt (vgl. \ref{sec:lokalesIndexeddb}) beschriebenen Funktion \textit{getAllFromStore}. 
+Der Erste Schritt der \textit{processOperations} Funktion ist das Laden der lokalen Operationen. Dies ist Notwendig, weil die eingehenden Operationen im weiteren Verlauf der \textit{processOperations} Methode mit den lokalen Operationen verglichen werden müssen. Wie Listing \ref{lst:processOperations1} zeigt, erfolgt das Laden der lokalen Operationen mit der im vorherigen Abschnitt (vgl. \ref{sec:lokalesIndexeddb}) beschriebenen Funktion \textit{getAllFromStore}.
 
 \begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Schritt 1}, label={lst:processOperations1}]{code/processOperations1.js}
+	\lstinputlisting[language = Javascript, caption={processOperations, Teil 1}, label={lst:processOperations1}]{code/processOperations1.js}
 \end{minipage}
 
-Nachdem die lokalen Operationen geladen sind, wird mit der Methode \textit{mapOperations} (vgl. Listing \ref{lst:mapOperations}) noch eine Vorkehrung für das Filtern im nächsten Schritt getroffen. \textit{mapOperations} gibt ein Promise zurück, welches bei Erfolg wiederum ein \textit{Map} Objekt zurückgibt. Eine \textit{Map} wird verwendet, da sie das Setzen von Objekten als Keys ermöglicht.
+Sobald die lokalen Operationen geladen sind, wird mit der Methode \textit{mapOperations} (vgl. Listing \ref{lst:mapOperations}) noch eine Vorkehrung für das Filtern im nächsten Schritt getroffen. \textit{mapOperations} gibt ein Promise zurück, welches beim auflösen ein \textit{Map} Objekt zurückgibt. Eine \textit{Map} wird verwendet, da sie das auch Objekte als Keys erlaubt, in diesem Fall eignet sich dies perfekt um zwei Operationen gegenüberzustellen. Ziel ist es hier, zu jeder eingehenden Operation eine lokale Operation zu finden, deren Zielwert übereinstimmt. Zielwert bedeutet hier die Kombination aus ObjectStore, Objekt und Schlüssel. 
 
 Die Methode beginnt mit der Erzeugung eines leeren \textit{Map} Objekts, und der Sortierung der lokalen Operationen. Die Sortierung erfolgt nach den Zeitstempeln, wobei die aktuellsten Operationen, also die mit dem höchsten Zeitstempel, am Anfang des Arrays platziert werden. 
 
-Anschließend wird für jede der eingehenden Operationen eine passende lokale Operation gesucht. Eine Operation ist \enquote{passend}, wenn sie den gleichen Wert wie die eingehende Operation bearbeitet. Durch das vorherige Sortieren der lokalen Operationen wird gesichert, dass die erste gefundene passende Operation stets die neuste ist.
+Anschließend wird für jede der eingehenden Operationen eine passende lokale Operation gesucht. Eine Operation ist \enquote{passend}, wenn sie den exakt gleichen Zielwert wie die eingehende Operation bearbeitet. Durch das vorherige Sortieren der lokalen Operationen ist sichergestellt, dass die erste gefundene passende Operation stets die neuste ist. Nachdem die erste passende Operation gefunden wurde, ist also kein weiteres Suchen notwendig.
 
-Daraufhin werden die eingehende Operation und die passende, lokale Operation zu der zuvor initialisierten \textit{Map} hinzugefügt. Die eingehende Operation wird als Schlüssel gesetzt, die lokale Operation als Wert. Wenn keine passende lokale Operation gefunden wird, ist der Wert \textit{undefined}. 
+Daraufhin werden die eingehende Operation und die passende, lokale Operation zu der zuvor initialisierten \textit{Map} hinzugefügt. Die eingehende Operation wird als Schlüssel gesetzt, die lokale Operation als Wert. Wenn keine passende lokale Operation gefunden wird, ist der Wert \textit{undefined}. Nachdem jede eingehende Operation entweder ein lokales Gegenstück oder \textit{undefined} zugeordnet bekommen hat, wird die nun gefüllte Map zurückgegeben. 
 
 \begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={Mappen der eingehenden Operationen zu passenden, lokalen Operationen}, label={lst:mapOperations}]{code/mapOperations.js}
+	\lstinputlisting[language = Javascript, caption={mapOperations Methode}, label={lst:mapOperations}]{code/mapOperations.js}
 \end{minipage}
 
 \subsection{Operationen filtern}
+\label{sec:filtern}
+
+Mit der zurückgegebenen Map von eingehenden zu lokalen Operationen kann das Filtern beginnen. In \textit{processOperations} werden die \textit{mappedOperations} nun an die Funktion \textit{filterOperationsToApply} weitergegeben (vgl. Listing \ref{lst:processOperations2}).
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={processOperations, Teil 2}, label={lst:processOperations2}]{code/processOperations2.js}
+\end{minipage}
+
+Ziel des Filterns ist es, zu ermitteln ob die eingehenden Operationen angewendet werden dürfen oder nicht. Die Regeln, nach welchen entschieden wird, welche Operationen angewendet werden und welche nicht, werden aus der Konzeption übernommen (vgl. \ref{fig:flwochartOperationen}). Das vorherige Gegenübermappen der eingehenden und lokalen Operationen erleichtert diesen Vorgang, da somit nicht während des Filterns nach den passenden lokalen Operationen gesucht werden muss. Technisch wäre es zwar durchaus möglich, das Zuordnen von eingehenden zu lokalen Operationen während des Filterns durchzuführen, die Konsequenz wäre jedoch verschachtelter, schwer lesbarer Code. 
+
+Listing \ref{lst:filterOperations1} zeigt den Code für das Filtern der Operationen, auf Abbildung \ref{fig:filterOperationsFlowchart} ist der Vorgang noch einmal bildlich dargestellt. Das Filtern beginnt mit dem Initialisieren zweier Arrays, eines zum Halten der Operationen für Rezepte, ein weiteres für Operationen die sich auf Zutaten beziehen. Anschließend läuft eine for-Schleife über jeden Schlüssel, also jede eingehende Operation, der \textit{mappedOperations} Map. In jeder Interation der for-Schleife wird über die Zeitstempel überpfüft, ob die eingehende Operation aktueller ist als die passende lokale Operation. Ist dies der Fall, wird die eingehende Operation zu dem jeweils passenden Array hinzugefügt. Dies passiert ebenso, wenn keine passende Lokale Operation vorhanden ist, und der Wert stattdessen \textit{undefined} ist. Wenn ein Wert in der Map \textit{undefined} ist, bedeutet es schließlich, dass das Objekt noch nicht existiert und angelegt werden muss. Diese Operationen müssen also immer angewendet werden. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Filtern der Operationen, Teil 1}, label={lst:filterOperations1}]{code/filterOperations1.js}
+\end{minipage}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.80\textwidth]{flowchartFilterOperations.png}
+	\caption{Filtern der Operationen}
+	\label{fig:filterOperationsFlowchart}
+\end{figure}
+
+Nachdem alle eingehenden Operationen die for-Schleife durchlaufen haben, werden die beiden Arrays \textit{recipeOperationsToApply} und \textit{ingredientOperationsToApply} in der Map, \textit{operationsToApply}, gespeichert (vgl. Listing \ref{lst:filterOperations2}). Schlüssel der in der Map gespeicherten Arrays ist jeweils der Name des ObjectStores. Dies geschieht, damit alle Operationen sich weiterhin in einem Objekt befinden und somit das Promise, welches \textit{filterOperationsToApply} zurückgibt, einen einzelnen Rückgabewert hat. Anschließend kann so die Promise-chain\footnote{Aneinanderreihung mehrerer Promises über das wiederholte Aufrufen der {.then} Methode des jeweils vorherigen Promises} zum Verarbeiten der Operationen nahtlos fortgeführt werden, ohne Kompromisse zum nutzen mehrerer Rückgabewerte treffen zu müssen.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Filtern der Operationen, Teil 2}, label={lst:filterOperations2}]{code/filterOperations2.js}
+\end{minipage}
 
 \subsection{Operationen anwenden}
 
+Sobald das Filtern der Operationen abgeschlossen ist, kann mit dem Anwenden der Operationen begonnen werden. Die Map, welche von \textit{filterOperationsToApply} zurückgegeben wurde, enthält nun Operationen die definitiv angewendet werden müssen, zugeordnet zum jeweiligen ObjectStore. Diese Operationen werden im folgenden als \textit{valide Operationen} bezeichnet. Als Beispiel, wie diese Struktur in der Anwendung aussieht, zeigt Abbildung \ref{fig:validOperationsMapChrome} eine \textit{validOperationsMap} mit vier validen Operationen für Rezepte und sechs validen Operationen für Zutaten.
 
-\section{Server}
-	\subsection{Express.js Schnittstelle}
-	\subsection{MongoDB Datenbank}
+\begin{figure}[H]
+	\centering
+	\fbox{\includegraphics[width=.6\textwidth]{validOperationsMapChrome.png}}
+	\caption{\textit{validOperationsMap} im Chrome-Debugger}
+	\label{fig:validOperationsMapChrome}
+\end{figure}
+
+Listing \ref{lst:processOperations3} zeigt die Fortsetzung der \textit{processOperations} Methode durch Verschachtelung zweier \textit{Promise.all}\footnote{Die Promise.all() Methode nimmt mehrere Promises als Input und gibt ein einzelnes Promise zurück, welches zu einem Array der Ergebnisse aller Input-Promises auflöst. Das zurückgegebene Promise wird nur aufgelöst, nachdem alle Input-Promises erfolgreich aufgelöst wurden. Wird eines der Input-Promises abgelehnt, ist auch sofort das Rückgabe-Promise abgelehnt} Methoden. Was auf den ersten Blick komplex aussieht, ist in der Praxis relativ einfach.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Teil 3}, label={lst:processOperations3}]{code/processOperations3.js}
+\end{minipage}
+
+Die erste \textit{Promise.all} Methode bekommt für jeden Schlüssel in der \textit{validOperationsMap} eine weitere \textit{Promise.all} Methode als Input. Diese weiteren \textit{Promise.all} Methoden bekommen für jede Operation in dem entsprechenden ObjectStore ein \textit{updateObject} Promise als Input. Das erste \textit{Promise.all} sorgt also dafür, dass jeder ObjectStore, der aktualisiert werden muss, aktualisiert wird. Die weiteren \textit{Promise.all} Methoden, jeweils eine pro ObjectStore, stellen sicher, dass für jede Operation die \textit{updateObejct} Methode aufgerufen wird.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={updateObject Methode, Teil 1}, label={lst:updateObject}]{code/updateObject.js}
+\end{minipage}
+
+In \textit{updateObject}\ref{lst:updateObject} wird das Objekt, auf dass die Operation angewendet wird, zuerst aus der Datenbank geladen. Dies ist nötig, weil es nicht möglich ist einzelne Werte eines Objektes über die IndexedDB Schnittstelle zu ändern ohne die anderen Werte des Objektes dabei zu verlieren. Deshalb ist es üblich, erst das komplette Objekt zu laden, dieses anschließend zu modifizieren um schlussendlich die modifizierte Version in der Datenbank zu speichern und die alte Version zu überschreiben. So geschieht es auch in der \textit{updateObject} Methode, welche nach dem Laden des Objektes die Funktion \textit{modifyObject} (vgl. Listing \ref{lst:modifyObject}) aufruft. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={modifyObject Methode}, label={lst:modifyObject}]{code/modifyObject.js}
+\end{minipage}
+
+Es kann vorkommen, dass das Objekt, welches Modifiziert werden soll, noch nicht existiert (vgl. Sektion \ref{sec:erweiterungCRDT}). Ist dies der Fall, gibt das Laden des Objektes im vorherigen Schritt \textit{undefined} zurück. Für diesen Fall, muss das Objekt in der \textit{modifyObject} Methode erst erstellt werden, bevor die Operation angewendet werden kann. Diese Anforderung ist auch in der Konzeption festgehalten (vgl. Abbildung \ref{fig:flwochartOperationen}).
+
+Anschließend wird die Operation angewendet, indem der in der Wert des in der Operation definierten Schlüssels mit dem neuen Wert überschrieben wird. Die Operation wird nun noch über die \textit{saveObject} Funktion (vgl. Sektion \ref{sec:lokalesIndexeddb}) in den lokalen Operationen gespeichert.
+
+Zurück in der \textit{updateObject} Methode steht nur noch das Speichern den modifizierten Objektes an. Dies erfolgt über die gleiche Methode, mit welcher zuvor schon die Operation gespeichert wurde.
+
+\section{Synchronisieren}
+
+Zum Synchronisieren werden Operationen zwischen Client und Server über eine API (siehe Sektion \ref{sec:Architektur}) ausgetauscht. In dieser Sektion wird beschrieben, wie diese Funktionalität auf Client und Server umgesetzt ist.
+
+Das Synchronisieren beginnt auf Seite des Clients mit dem Abrufen aller lokalen Operationen (vgl. \ref{lst:sync}). Sind die Operationen erfolgreich abgerufen, werden sie über den \textit{\textbackslash{}sync} Endpunkt der API, an den Server geschickt. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Synchronisation Client}, label={lst:sync}]{code/sync.js}
+\end{minipage}
+
+Auf dem Server werden die Operationen nach den gleichen Kriterien verarbeitet wie die Operationen des Clients (vgl. Abbildung \ref{fig:flwochartOperationen}), mit dem Unterschied dass der Server die Operationen nur Speichern und nicht Anwenden muss (vgl. \ref{sec:AufgabeServer}). Über die MongoDB Funktion \textit{insertMany} können alle Operationen auf einmal in die Datenbank geschrieben werden (vgl. Listing  \ref{lst:server1}). Wenn eine Operation bereits in der Datenbank existiert, wird sie mit \textit{insertMany} nicht erneut gespeichert. Zwar meldet MongoDB bei solchen Fällen einen Fehler, doch mit der Option \textit{ordered: false} können diese ignoriert werden.
+
+Nach dem Speichern der eingehenden Operationen werden die lokalen Operationen des Servers mit der MongoDB Funktion \textit{find} geladen, und anschließend als Response an den Client geschickt. Auf diesem werden die eingehenden Operationen nun mit der \textit{processOperations} (siehe \ref{sec:processOperations}) Methode verarbeitet.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Synchronisation Server}, label={lst:server1}]{code/server1.js}
+\end{minipage}
+
+\section{Löschen überflüssiger Operationen}
+
+Durch das Ständige hinzufügen von Operationen, droht die Kommunikation zwischen Client und Server auf Dauer immer langsamer zu werden. Um dies zu verhindern, sind sowohl im Client als auch im Server Maßnahmen zur Reduzierung der Menge an Operationen implementiert. Kommt es beim Verarbeiten der Operationen vor, dass zwei Operationen die selbe Kombination aus ObjectStore, Objekt, Schlüssel und Wert haben, setzt sich immer die aktuellere der beiden Operationen durch. In der Implementierung des Prototypen wird sich die ältere Operation nie durch die aktuelle durchsetzen, was bedeutet, dass die ältere Operation irrelevant. In diesem Fall wird die alte Operation gelöscht. 
+
+Auf dem Client findet das Löschen alter Operationen während des Filterns der Operationen statt (vgl. \ref{sec:filtern}). In diesem Schritt werden die lokalen Operationen schließlich ohnehin mit den eingehenden Operationen verglichen. 
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Client}, label={lst:deleteUselessOpCluient}]{code/deleteUselessOpClient.js}
+\end{minipage}
+
+\section{Zusammenfassung}
+%Es wurde Grow Only set LWW Map
+
+\chapter{Evaluation}
+
+In diesem Kapitel werden die funktionalen- und nicht-funktionalen Anforderungen reflektiert und auf Funktionalität und Vollständigkeit überprüft.
+
+\section{Anlegen, Bearbeiten und Löschen von Rezepten und Zutaten}
+Das Anlegen, Bearbeiten und Löschen von Rezepten und Zutaten funktioniert über das implementierte CRDT. Somit können diese Aktionen von der Applikation vorgenommen werden, ohne dabei direkt die Anwendungsdaten zu verändern. Stattdessen nutzt die Applikation die Schnittstelle des CRDTs zum generieren von Operationen, welche anschließend mit der \textit{processOperations} Methode angewendet werden können.
+
+Die Anforderungen zum Bearbeiten und Anlegen der Objekte sind im Prototypen vollständig erfüllt, sollte dieser jedoch um komplexere Datenstrukturen erweitert werden, müsste auch das CRDT nachziehen. Da ein Grow-Only Set umgesetzt wurde, findet das Löschen eines Objekts nicht wirklich statt, stattdessen wird die Existenz des Objektes über einen Indikator gesteuert. Somit wächst die Menge der gespeicherten Daten konstant. Auf die Funktionalität des Prototypen hat dies zwar keine Auswirkung, da die gespeicherten Datenmengen winzig sind. Für große, skalierbare Projekte sollte jedoch auf eine andere Methodik zum Löschen gesetzt werden.
+
+\section{Zugriff mit mehreren Endgeräten zugleich}
+Mehrere Nutzer können zur gleichen Zeit auf die selbe Applikation zugreifen. Solange sie nicht den exakt gleichen Wert bearbeiten, sorgt die CRDT-basierte Synchronisierung dafür, dass niemand seine Arbeit verliert. Der gewählte Weg der \ac{LWW} Konfliktlösung ist ein Kompromiss, der für die Anwendung am meisten Sinn macht. Es sollte immer individuell entschieden werden, welche Art der Lösung für gleichzeitige Änderungen des selben Wertes am besten zu den Anforderungen der Applikation passt.
+
+\section{Offline Erreichbarkeit}
+Die Offline Erreichbarkeit wird durch die Implementierung eines Service-Workers ermöglicht. Die Applikation ist offline vollständig Funktionsfähig, nur das Synchronisieren über den Server funktioniert natürlich nicht, wenn der Server nicht erreichbar ist. Ein Interessanter Ansatz wäre es, Synchronisation auch über andere Wege als den Server zu erlauben. Das Synchronisieren könnte schließlich auch von Client zu Client Erfolgen, da das Austauschen der lokalen Operationen alles ist, was dafür nötig ist. 
+
+\section{Lokales Speichern}
+Für das lokale Speichern wird IndexedDB genutzt. Da der direkte Weg über die IndexedDB API unnötig komplex erscheint, nutzt der Prototyp die Bibliothek idb.js. Diese ermöglicht, durch das bereitstellen von Promises, einen sehr angenehmen Umgang mit der Schnittstelle. Somit können die Anwendungsdaten offline und online problemlos gespeichert und ausgelesen werden.
+
+\section{Synchronisierung von Daten}
 
 
 
-
+\section{SEC}
+\section{Konfliktfreies Synchronisieren}
+\section{Anschauliche Umsetzung}
+\section{Unabhängigkeit von Datenbank-Technologien}
 
 
 \newpage
