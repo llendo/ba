@@ -3,20 +3,20 @@ var exampleRecipe = {
   name: "Tomatensalat",
   ingredients: [
     {
-      name = "Tomaten",
-      measure: "500g"
+      name: "Tomaten",
+      measure: "500g",
     },
     {
       name: "Zwiebeln",
-      measure: "1"
+      measure: "1",
     },
     {
       name: "Olivenöl",
-      measure: "3 EL"
+      measure: "3 EL",
     },
     {
       name: "Essig",
-      measure: "1 EL"
-    }
-  ]
-}
+      measure: "1 EL",
+    },
+  ],
+};
