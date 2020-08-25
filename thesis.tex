@@ -20,8 +20,10 @@
 \usepackage[table,xcdraw,pdftex]{xcolor}
 \usepackage{calc}
 \usepackage{enumitem}
-
+\usepackage{chngcntr}
 \usepackage{jslistings}
+
+\AtBeginDocument{\counterwithout{lstlisting}{chapter}}
 
 
 \lstset{basicstyle=\normalsize\linespread{1}\ttfamily\small,
@@ -70,15 +72,11 @@ natbib=true
 
 \parskip 1.75ex plus 0.5ex minus 0.5ex
 
-\pagestyle{fancy}
-\cfoot{\thepage}
-\lhead[\leftmark]{}
-\rhead[]{\leftmark}
 
 
 
 
-\title{Platzhalter Titel}
+\title{Synchronisierung von Daten in einer Offline-First Webanwendung mithilfe von CRDTs}
 \subtitle{}
 \author{Lennart Ploog}
 \publishers{IS Medieninformatik\\ Fakultät 4\\ Hochschule Bremen}
@@ -88,14 +86,51 @@ natbib=true
 \makeatother
 
 \begin{document}
-	\maketitle
-	\newpage
-	\tableofcontents
-	\newpage
+\pagenumbering{gobble}
+\begin{titlepage}
+
+\centering
+\includegraphics[width=0.30\textwidth]{hs_logo.png}
+\par\vspace{1cm}
+{\scshape\Large Hochschule Bremen \par}
+{\scshape Fakultät 4 \\}
+{\scshape Internationaler Studiengang Medieninformatik B.Sc. \par}
+\vspace{1.5cm}
+{\scshape\Large Bachelorthesis  \par}
+\vspace{1.5cm}
+{\LARGE\bfseries Synchronisierung von Daten in einer Offline-First Webanwendung mithilfe von CRDTs\par}
+\vspace{1.5cm}
+
+\newcolumntype{x}[1]{>{\raggedleft\arraybackslash\hspace{0pt}}p{#1}}
+\begin{tabular}{x{6.5cm}p{6.5cm}}
+	\rule{0mm}{5ex}\textbf{Autor:} & Lennart Ploog \\ 
+	\rule{0mm}{5ex}\textbf{Matrikelnummer:} & 354556 \\ 
+	\rule{0mm}{5ex}\textbf{Erstgutachter:} & Prof. Dr. Volker Paelke \\
+	\rule{0mm}{5ex}\textbf{Zweitgutachter:} & Prof. Dr. Martin Hering-Bertram\\
+	\rule{0mm}{5ex}\textbf{Abgabedatum:} & 28.08.2020\\
+\end{tabular} 
+\end{titlepage}
+\newpage
+\section*{Zusammenfassung}
+Die Arbeit \enquote{\inserttitle} behandelt die Konzeption und Umsetzung einer Offline-First Webanwendung mit einer Datenstruktur auf Basis von konfliktfreien Replizierten Datentypen(CRDTs). Zuerst werden die Grundlagen vom Offline-First Prinzip und CRDTs erkundet. Dabei soll dem Leser vermittelt werden, wie und warum der Einsatz von CRDTs in Offline-First Applikationen hilfreich sein kann, denn die Themen stehen nicht zwangsläufig in Verbindung. Anschließend wird eine Webanwendung, welche auch offline vollständig nutzbar ist, als Prototyp konzipiert und umgesetzt. Die Datenstruktur wird mithilfe von CRDTs so umgesetzt, dass ein konfliktfreies Synchronisieren von Daten mit einem Server möglich ist, auch wenn Änderungen offline erfolgt sind. Nach der Fertigstellung des Prototypen folgt eine Evaluation der entwickelten Anwendung und ihrer Funktionalitäten. Abgeschlossen wird die Arbeit mit dem Fazit, in welchem zusammengefasst wird welche Erkenntnisse über den Einsatz von CRDTs in Offline-First Anwendungen gewonnen werden konnten.
+
+\section*{Abstract}
+The bachelors thesis \enquote{Data Synchronization In A Offline-First Web Application Using CRDTs} discusses the design and implementation of an offline-first web application with a data structure based on conflict-free replicated data types(CRDTs). First, the basics of the offline-first principle and CRDTs are explored. Because the topics are not necessarily related, the reader is given an explanation how and why the use of CRDTs in offline-first applications can be helpful. Subsequently, a web application, which is fully usable offline, is designed and implemented as a prototype. With the help of CRDTs, the data structure is implemented to allow conflict-free synchronization of it's data with a server, even if changes have been made offline. After completion of the prototype an evaluation of the developed application and its functionalities is conducted. The thesis is concluded with a summary of the gained knowledge on the use of CRDTs in offline First applications.
+\newpage
+
+\pagestyle{fancy}
+\cfoot{\thepage}
+\lhead[\leftmark]{}
+\rhead[]{\leftmark}
+
+\tableofcontents
+\newpage
 \section*{Abkürzungsverzeichnis}
 	\begin{acronym}[Bash]
 		\acro{CRDT}{Conflict-free replicated data type}
 		\acrodefplural{CRDT}{Conflict-free replicated data types}
+		\acro{PWA}{Progressive Web-App}
+		\acrodefplural{PWA}{Progressive Web-Apps}
 		\acro{SC}{Strong Consistency}
 		\acro{SEC}{Strong Eventual Consistency}
 		\acro{EC}{Eventual Consistency}
@@ -104,13 +139,14 @@ natbib=true
 		\acro{JSON}{JavaScript Object Notation}
 		\acro{HTTP}{Hypertext Transfer Protocol}
 		\acro{HTTPS}{Hypertext Transfer Protocol Secure}
-		\acro{LWW}{Last-Writer-Wins}
-		\acro{LWW-Register}{Last-Writer-Wins Register}
+		\acro{LWW}{Last-Write-Wins}
+		\acro{LWW-Register}{Last-Write-Wins Register}
 		\acro{G-Set}{Grow-Only Set}
 		\acro{CORS}{Cross-Origin Resource Sharing}
 	\end{acronym}
-\chapter{Abstract}
-TODO: Acronyms, Figures
+
+\newpage
+\pagenumbering{arabic}
 \chapter{Einleitung}\label{sec:Einleitung}
 \section{Problemfeld}\label{sec:Problemfeld}
 
@@ -137,26 +173,16 @@ Es gibt verschiedene Möglichkeiten, wie \acp{CRDT} in Webapplikationen eingeset
 
 Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte auch der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, auf welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
 
-\subsection{Prototyp}
-Platzhalter, genauer nach Fertigstellung des Prototypen
-Als Prototyp wird ein Online-Kochbuch mit folgenden Funktionen umgesetzt:
-\begin{itemize}
-	\item Anlegen, Bearbeiten und Löschen von Rezepten mit Namen, Zutaten und Beschreibung
-	\item Zugriff auf die Gleichen Rezepte von verschiedenen Clients
-	\item \enquote{Liken} der Rezepte
-\end{itemize}
-
-\chapter{Verwandte Arbeiten}
+\section{Verwandte Arbeiten}
 \label{sec:VerwandteArbeiten}
+
 \acp{CRDT} sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von \acp{CRDT}, um \ac{SEC} in großen verteilten Systemen zu garantieren. \ac{SEC} erweitert den bis dahin verbreiteten Ansatz der \ac{EC}. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
 
-Seitdem hat sich die Verwendung von \acp{CRDT} in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke.
+Seitdem hat sich die Verwendung von \acp{CRDT} in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke. Eine weitere Bibliothek, die vorgefertigte \acp{CRDT} bereitstellt ist yjs\autocite{inproceedingsYjs}. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{\acp{CRDT} for Mortals} \autocite{OnlineCrdtsForMortals}, in welchem über den Einsatz von \acp{CRDT} im Client-Server Modell gesprochen wird.  
 
 Mit Woot \klammercite{InproceedingsCRDTWoot}, Logoot \klammercite{InproceedingsCRDTLogoot} und LSEQ \klammercite{InproceedingsCRDTLSEQ} sind bereits \acp{CRDT} speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
-Der Anzahl an Quellen und Ressourcen rund um \acp{CRDT} mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von \acp{CRDT} für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die \acp{CRDT} konzipiert sind, sind mir keine wissenschaftlichen Arbeiten über den konkreten Einsatz von \acp{CRDT} in Offline-First Applikationen bekannt. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{\acp{CRDT} for Mortals} \autocite{Online\acp{CRDT}ForMortals}, in welchem über den Einsatz von \acp{CRDT} im Client-Server Modell gesprochen wird. In dem Vortrag geht es jedoch um die Entwicklung einer komplett lokalen Applikation.
-
-Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von \acp{CRDT} in einer Offline-First Webanwendung umzusetzen und zu ermitteln, welche besonderen Herausforderungen diese Umgebung aufweist.
+Der Anzahl an Quellen und Ressourcen rund um \acp{CRDT} mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von \acp{CRDT} für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die \acp{CRDT} konzipiert sind, sind dem Autoren keine wissenschaftlichen Arbeiten über den konkreten Einsatz von \acp{CRDT} in Offline-First Webanwendungen bekannt. Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von \acp{CRDT} in einer Offline-First Webanwendung umzusetzen und zu ermitteln, wie dies bei der Bewältigung der Herausforderungen dieser Umgebung, helfen kann.
 
 \chapter{Grundlagen}
 Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte, auf welchen Offline-First Applikationen und \acp{CRDT} aufbauen. 
@@ -294,7 +320,6 @@ Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herau
 \acp{CRDT} sind abstrakte Datentypen, die in verteilten Systemen eingesetzt werden, um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Registern, Sets und Maps. \acp{CRDT} erweitern diese Datentypen um eine Schnittstelle, welche das Daten-Objekt neben den klassischen Operationen wie dem Auslesen des gespeicherten Wertes um zusätzliche Funktionalitäten erweitert, um \ac{SEC} zu gewährleisten \autocite[S.~1]{ArticleCRDTOverview}. 
 
 Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Wertes des Objekts. Weitere Daten, um welche \acp{CRDT} klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (vgl. Abschnitt \ref{sec:lwwRegister}).
-%todo WERT = Besseres wort finden? Value?
 %todo: Abbildung CRDT mit Value, Merge, Zusatz
 Die Datentypen werden speziell so modelliert, dass das Aktualisieren von \acp{CRDT} kommutativ, assoziativ und idempotent erfolgen kann \autocite{InproceedingsCrdtsInProduction}.
 
@@ -317,7 +342,7 @@ In der Literatur werden \acp{CRDT} in state-based und operation-based unterteilt
 	Beim Synchronisieren von state-based \acp{CRDT} wird der gesamte Zustand der Objekte ausgetauscht. Die Implementierung eines state-based CRDT muss über eine \enquote{Merge} Methode verfügen, damit der Zustand zweier \acp{CRDT} zu einem kombiniert werden kann, um so Konvergenz zu erreichen. Der Zustand eines state-based \acp{CRDT} wird durch einen Halbverband\footnote{\enquote{Ein Halbverband ist eine kommutative Halbgruppe (d.h. eine Menge H mit einer assoziativen und kommutativen binären Verknüpfung $\sqcap$), in der jedes Element idempotent ist [..]} \autocite{MiscHalbverband}} gebildet, dessen obere Schranke den aktuellen Wert des \acp{CRDT} darstellt. \autocite{InproceedingsStateBased}
 	
 	\item[Operation-based]
-	Bei der Variante der operation-based \acp{CRDT} wird nicht der gesamte Zustand der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der Zustand eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Ändert sich beispielsweise der Wert eines Counters von 5 zu 10, so würde die Operation nicht den neuen Wert enthalten, sondern die durchgeführte Addition, also \enquote{+ 5}. Jede so erzeugte Operation muss an alle anderen Replikationen des Systems verteilt werden. Wenn eine Replikation eine solche Operation empfängt, wird die gleiche Änderung, welche schon im Ursprung angewendet wurde, auch hier angewandt. Da die Operationen kommutativ sein müssen, ist die Reihenfolge der Updates nicht relevant. Die Implementierung eines operation-based \acp{CRDT} muss garantieren, dass alle Replikationen diese Updates zuverlässig erhalten und anwenden \autocite[S.18-19]{ArticleCRDTOverview}. Im Gegensatz zu der Merge Methode des State-based \acp{CRDT} muss ein Operation-based CRDT also über zwei Methoden verfügen: Eine zum Generieren von Operationen und eine weitere zum Anwenden von Operationen.
+	Bei der Variante der operation-based \acp{CRDT} wird nicht der gesamte Zustand der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der Zustand eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Ändert sich beispielsweise der Wert eines Counters von 5 zu 10, so würde die Operation nicht den neuen Wert enthalten, sondern die durchgeführte Addition, also \enquote{+ 5}. Jede so erzeugte Operation muss an alle anderen Replikationen des Systems verteilt werden. Wenn eine Replikation eine solche Operation empfängt, wird die gleiche Änderung, welche schon im Ursprung angewendet wurde, auch hier angewandt. Da die Operationen kommutativ sein müssen, ist die Reihenfolge der Updates nicht relevant. Die Implementierung eines operation-based \acp{CRDT} muss garantieren, dass alle Replikationen diese Updates zuverlässig erhalten und anwenden \autocite[S.18-19]{ArticleCRDTOverview}. Im Gegensatz zu der Merge Methode des State-based \acp{CRDT} muss ein operation-based CRDT also über zwei Methoden verfügen: Eine zum Generieren von Operationen und eine weitere zum Anwenden von Operationen.
 \end{description} 
 
 Beide Kategorien sind äquivalent \autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet, dass ein state-based CRDT ein operation-based CRDT emulieren kann und umgekehrt.
@@ -330,6 +355,7 @@ Beide Kategorien sind äquivalent \autocite[S. 9]{InproceedingsCRDTOriginal}, wa
 Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
 \subsection{Last-Write-Wins Map}
+\label{lwwMap}
 \sloppypar
 Während ein \ac{LWW-Register} ein einzelnes Schlüssel-Wert Paar darstellt, besteht eine LWW-Map aus einem bis beliebig vielen LWW-Registern \autocite[43]{PhdthesisLwwMap}.
 
@@ -342,7 +368,6 @@ Ein Set ist ein abstrakter Datentyp, welcher eine Sammlung von Objekten verwalte
 Ein \ac{G-Set} löst dieses Problem, indem keine Objekte aus dem Set entfernt werden können  \autocite[S.17]{ArticlePureOP}. Das Entfernen des Objektes kann durch eine \enquote{tombstone} Markierung ersetzt werden. Ist diese Markierung gesetzt, wird der Eintrag vom System so behandelt, als wäre er nicht vorhanden. Somit ist das Set wieder kommutativ, und die Funktionalität des Löschens bleibt bestehen \autocite[S.7]{InproceedingsTombstone}.
 
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
-
 
 \chapter{Konzeption}
 %EINLEITENDER ABSCHNITT
@@ -518,7 +543,7 @@ Zwei Replikationen können sich synchronisieren, indem sie ihre gespeicherten Op
 
 Beim Anwenden der Operationen kann es vorkommen, dass zwei Operationen Änderungen am gleichen Wert vorgenommen haben. Für solche Fälle, genannt parallele Änderungen, müssen Regeln implementiert werden, um zu entscheiden, welche der parallelen Änderungen den Vorzug bekommt. Nur so ist gewährleistet, dass zwei Replikationen nach dem Synchronisieren auf dem gleichen Stand sind. Wäre die Auswahl zufällig oder würde sich stets die lokale Änderung durchsetzen, könnten die Applikationsdaten voneinander abweichen. So wäre Konvergenz zwischen den Replikationen und somit \ac{SEC} nicht gewährleistet und der Einsatz von \acp{CRDT} überflüssig.
 
-Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt. Abbildung \ref{fig:flwochartOperationen} zeigt, wie entschieden wird, ob eine eingehende Operation angewendet wird. Zuerst wird überprüft, ob es für eine eingehende Operation, welche angewendet werden soll, bereits eine lokale Operation gibt, welche denselben Wert betrifft. Ist dies der Fall, werden die Zeitstempel der aktuellsten lokalen Operation und der eingehenden Operationen verglichen. Ist die lokale Operation neuer als die eingehende Operation, wird die eingehende Operation ignoriert. Ist hingegen die eingehende Operation neuer, wird sie angewandt und anschließend, wie vorgesehen, zu den lokalen Operationen hinzugefügt. Dies verhindert auch das mehrfache Anwenden derselben Operation, wodurch das Verarbeiten eingehender Operationen idempotent ist. Dies ist eine wichtige Eigenschaft für das CRDT (vgl. Abschnitt \ref{sec:kommuassoidem}). 
+Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt, wodurch sich einzelne Rezepte und Zutaten als LWW-Map Bezeichnen lassen (vgl. Abschnitt \ref{sec:lwwMap}). Abbildung \ref{fig:flwochartOperationen} zeigt, wie entschieden wird, ob eine eingehende Operation angewendet wird. Zuerst wird überprüft, ob es für eine eingehende Operation, welche angewendet werden soll, bereits eine lokale Operation gibt, welche denselben Wert betrifft. Ist dies der Fall, werden die Zeitstempel der aktuellsten lokalen Operation und der eingehenden Operationen verglichen. Ist die lokale Operation neuer als die eingehende Operation, wird die eingehende Operation ignoriert. Ist hingegen die eingehende Operation neuer, wird sie angewendet und anschließend, wie vorgesehen, zu den lokalen Operationen hinzugefügt. Dies verhindert auch das mehrfache Anwenden derselben Operation, wodurch das Verarbeiten eingehender Operationen idempotent ist. Dies ist eine wichtige Eigenschaft für das CRDT (vgl. Abschnitt \ref{sec:kommuassoidem}). 
 
 \begin{figure}[H]
 	\centering
@@ -543,7 +568,7 @@ Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könn
 	\label{fig:rezeptLöschenSchlecht}
 \end{figure}
 
-Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass Rezepte und Zutaten nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \textit{tombstone}. Beim \textit{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
+Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass die Elemente des Sets, also die Rezepte und Zutaten, nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \textit{tombstone}. Beim \textit{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language=JavaScript, caption={Beispiel Entfernen-Operation}, label={lst:operationv2}]{code/operationTombstone.js}
@@ -785,7 +810,7 @@ Sobald die lokalen Operationen geladen sind, wird mit der Methode \textit{mapOpe
 
 Die Methode beginnt mit der Erzeugung eines leeren \textit{Map} Objektes und der Sortierung der lokalen Operationen. Die Sortierung erfolgt nach den Zeitstempeln, wobei die aktuellsten Operationen, also die mit dem höchsten Zeitstempel, am Anfang des Arrays platziert werden. 
 
-Anschließend wird für jede der eingehenden Operationen eine passende lokale Operation gesucht. Eine Operation ist \enquote{passend}, wenn sie den exakt gleichen Zielwert wie die eingehende Operation bearbeitet. Durch das vorherige Sortieren der lokalen Operationen ist sichergestellt, dass die erste gefundene passende Operation stets die neuste ist. Nachdem die erste passende Operation gefunden wurde, ist also kein weiteres Suchen notwendig.
+Anschließend wird für jede der eingehenden Operationen eine passende lokale Operation gesucht. Eine Operation ist \enquote{passend}, wenn sie den exakt gleichen Zielwert wie die eingehende Operation bearbeitet. Durch das vorherige Sortieren der lokalen Operationen ist sichergestellt, dass die erste gefundene passende Operation stets die neueste ist. Nachdem die erste passende Operation gefunden wurde, ist also kein weiteres Suchen notwendig.
 
 Daraufhin werden die eingehende Operation und die passende, lokale Operation zu der zuvor initialisierten \textit{Map} hinzugefügt. Die eingehende Operation wird als Schlüssel gesetzt, die lokale Operation als Wert. Wenn keine passende lokale Operation gefunden wird, ist der Wert \textit{undefined}. Nachdem jede eingehende Operation entweder ein lokales Gegenstück oder \textit{undefined} zugeordnet bekommen hat, wird die nun gefüllte Map zurückgegeben. 
 
@@ -802,9 +827,9 @@ Mit der zurückgegebenen Map von eingehenden zu lokalen Operationen kann das Fil
 	\lstinputlisting[language = Javascript, caption={processOperations, Teil 2}, label={lst:processOperations2}]{code/processOperations2.js}
 \end{minipage}
 
-Ziel des Filterns ist es, zu ermitteln ob die eingehenden Operationen angewendet werden dürfen oder nicht. Die Regeln, nach welchen entschieden wird, welche Operationen angewendet werden und welche nicht, werden aus der Konzeption übernommen (vgl. \ref{fig:flwochartOperationen}). Das vorherige Gegenübermappen der eingehenden und lokalen Operationen erleichtert diesen Vorgang, da somit nicht während des Filterns nach den passenden lokalen Operationen gesucht werden muss. Technisch wäre es zwar durchaus möglich, das Zuordnen von eingehenden zu lokalen Operationen während des Filterns durchzuführen, die Konsequenz wäre jedoch verschachtelter, schwer lesbarer Code. 
+Ziel des Filterns ist es, zu ermitteln, ob die eingehenden Operationen angewendet werden dürfen oder nicht. Die Regeln, nach welchen entschieden wird, welche Operationen angewendet werden und welche nicht, werden aus der Konzeption übernommen (vgl. Abbildung \ref{fig:flwochartOperationen}). Das vorherige Zuordnen der lokalen zu den eingehenden Operationen erleichtert diesen Vorgang, da somit nicht während des Filterns nach den passenden lokalen Operationen gesucht werden muss. Technisch wäre es zwar durchaus möglich, das Zuordnen von lokalen zu eingehenden Operationen während des Filterns durchzuführen, die Konsequenz wäre jedoch verschachtelter, schwer lesbarer Code.
 
-Listing \ref{lst:filterOperations1} zeigt den Code für das Filtern der Operationen, auf Abbildung \ref{fig:filterOperationsFlowchart} ist der Vorgang noch einmal bildlich dargestellt. Das Filtern beginnt mit dem Initialisieren zweier Arrays, eines zum Halten der Operationen für Rezepte, ein weiteres für Operationen die sich auf Zutaten beziehen. Anschließend läuft eine for-Schleife über jeden Schlüssel, also jede eingehende Operation, der \textit{mappedOperations} Map. In jeder Interation der for-Schleife wird über die Zeitstempel überpfüft, ob die eingehende Operation aktueller ist als die passende lokale Operation. Ist dies der Fall, wird die eingehende Operation zu dem jeweils passenden Array hinzugefügt. Dies passiert ebenso, wenn keine passende Lokale Operation vorhanden ist, und der Wert stattdessen \textit{undefined} ist. Wenn ein Wert in der Map \textit{undefined} ist, bedeutet es schließlich, dass das Objekt noch nicht existiert und angelegt werden muss. Diese Operationen müssen also immer angewendet werden. 
+Listing \ref{lst:filterOperations1} zeigt den Code für das Filtern der Operationen, auf Abbildung \ref{fig:filterOperationsFlowchart} ist der Vorgang noch einmal bildlich dargestellt. Das Filtern beginnt mit dem Initialisieren zweier Arrays, eines zum Halten der Operationen für Rezepte, ein weiteres für Operationen, die sich auf Zutaten beziehen. Anschließend läuft eine for-Schleife über jeden Schlüssel, also jede eingehende Operation, der \textit{mappedOperations} Map. In jeder Iteration der for-Schleife wird über die Zeitstempel geprüft, ob die eingehende Operation aktueller ist als die passende lokale Operation. Ist dies der Fall, wird die eingehende Operation zu dem jeweils passenden Array hinzugefügt. Dies passiert ebenso, wenn keine passende lokale Operation vorhanden ist und der Wert stattdessen \textit{undefined} ist. Wenn ein Wert in der Map \textit{undefined} ist, bedeutet es schließlich, dass das Objekt noch nicht existiert und angelegt werden muss. Diese Operationen müssen also immer angewendet werden. 
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Filtern der Operationen, Teil 1}, label={lst:filterOperations1}]{code/filterOperations1.js}
@@ -817,7 +842,7 @@ Listing \ref{lst:filterOperations1} zeigt den Code für das Filtern der Operatio
 	\label{fig:filterOperationsFlowchart}
 \end{figure}
 
-Nachdem alle eingehenden Operationen die for-Schleife durchlaufen haben, werden die beiden Arrays \textit{recipeOperationsToApply} und \textit{ingredientOperationsToApply} in der Map, \textit{operationsToApply}, gespeichert (vgl. Listing \ref{lst:filterOperations2}). Schlüssel der in der Map gespeicherten Arrays ist jeweils der Name des ObjectStores. Dies geschieht, damit alle Operationen sich weiterhin in einem Objekt befinden und somit das Promise, welches \textit{filterOperationsToApply} zurückgibt, einen einzelnen Rückgabewert hat. Anschließend kann so die Promise-chain\footnote{Aneinanderreihung mehrerer Promises über das wiederholte Aufrufen der {.then} Methode des jeweils vorherigen Promises} zum Verarbeiten der Operationen nahtlos fortgeführt werden, ohne Kompromisse zum nutzen mehrerer Rückgabewerte treffen zu müssen.
+Nachdem alle eingehenden Operationen die for-Schleife durchlaufen haben, werden die beiden Arrays \textit{recipeOperationsToApply} und \textit{ingredientOperationsToApply} in der Map \textit{operationsToApply} gespeichert (vgl. Listing \ref{lst:filterOperations2}). Schlüssel der in der Map gespeicherten Arrays ist jeweils der Name des ObjectStores. Dies geschieht, damit alle Operationen sich weiterhin in einem Objekt befinden und somit das Promise, welches \textit{filterOperationsToApply} zurückgibt, einen einzelnen Rückgabewert hat. Anschließend kann so die Promise-chain\footnote{Aneinanderreihung mehrerer Promises über das wiederholte Aufrufen der \textit{.then} Methode des jeweils vorherigen Promises} zum Verarbeiten der Operationen nahtlos fortgeführt werden, ohne Kompromisse zum Nutzen mehrerer Rückgabewerte treffen zu müssen.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Filtern der Operationen, Teil 2}, label={lst:filterOperations2}]{code/filterOperations2.js}
@@ -825,7 +850,7 @@ Nachdem alle eingehenden Operationen die for-Schleife durchlaufen haben, werden 
 
 \subsection{Operationen anwenden}
 
-Sobald das Filtern der Operationen abgeschlossen ist, kann mit dem Anwenden der Operationen begonnen werden. Die Map, welche von \textit{filterOperationsToApply} zurückgegeben wurde, enthält nun Operationen die definitiv angewendet werden müssen, zugeordnet zum jeweiligen ObjectStore. Diese Operationen werden im folgenden als \textit{valide Operationen} bezeichnet. Als Beispiel, wie diese Struktur in der Anwendung aussieht, zeigt Abbildung \ref{fig:validOperationsMapChrome} eine \textit{validOperationsMap} mit vier validen Operationen für Rezepte und sechs validen Operationen für Zutaten.
+Sobald das Filtern der Operationen abgeschlossen ist, kann mit dem Anwenden der Operationen begonnen werden. Die Map, welche von \textit{filterOperationsToApply} zurückgegeben wurde, enthält nun Operationen, die definitiv angewendet werden müssen, zugeordnet zum jeweiligen ObjectStore. Diese Operationen werden im Folgenden als \textit{valide Operationen} bezeichnet. Als Beispiel, wie diese Struktur in der Anwendung aussieht, zeigt Abbildung \ref{fig:validOperationsMapChrome} eine \textit{validOperationsMap} mit vier validen Operationen für Rezepte und sechs validen Operationen für Zutaten.
 
 \begin{figure}[H]
 	\centering
@@ -834,7 +859,7 @@ Sobald das Filtern der Operationen abgeschlossen ist, kann mit dem Anwenden der 
 	\label{fig:validOperationsMapChrome}
 \end{figure}
 
-Listing \ref{lst:processOperations3} zeigt die Fortsetzung der \textit{processOperations} Methode durch Verschachtelung zweier \textit{Promise.all}\footnote{Die Promise.all() Methode nimmt mehrere Promises als Input und gibt ein einzelnes Promise zurück, welches zu einem Array der Ergebnisse aller Input-Promises auflöst. Das zurückgegebene Promise wird nur aufgelöst, nachdem alle Input-Promises erfolgreich aufgelöst wurden. Wird eines der Input-Promises abgelehnt, ist auch sofort das Rückgabe-Promise abgelehnt} Methoden. Was auf den ersten Blick komplex aussieht, ist in der Praxis relativ einfach.
+Listing \ref{lst:processOperations3} zeigt die Fortsetzung der \textit{processOperations} Methode durch Verschachtelung zweier \textit{Promise.all}\footnote{Die \textit{Promise.all} Methode nimmt mehrere Promises als Input und gibt ein einzelnes Promise zurück, welches zu einem Array der Ergebnisse aller Input-Promises auflöst. Das zurückgegebene Promise wird nur aufgelöst, nachdem alle Input-Promises erfolgreich aufgelöst wurden. Wird eines der Input-Promises abgelehnt, ist auch sofort das Rückgabe-Promise abgelehnt.} Methoden. Was auf den ersten Blick komplex aussieht, ist in der Praxis relativ einfach.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Teil 3}, label={lst:processOperations3}]{code/processOperations3.js}
@@ -846,31 +871,31 @@ Die erste \textit{Promise.all} Methode bekommt für jeden Schlüssel in der \tex
 	\lstinputlisting[language = Javascript, caption={updateObject Methode, Teil 1}, label={lst:updateObject}]{code/updateObject.js}
 \end{minipage}
 
-In \textit{updateObject}\ref{lst:updateObject} wird das Objekt, auf dass die Operation angewendet wird, zuerst aus der Datenbank geladen. Dies ist nötig, weil es nicht möglich ist einzelne Werte eines Objektes über die IndexedDB Schnittstelle zu ändern ohne die anderen Werte des Objektes dabei zu verlieren. Deshalb ist es üblich, erst das komplette Objekt zu laden, dieses anschließend zu modifizieren um schlussendlich die modifizierte Version in der Datenbank zu speichern und die alte Version zu überschreiben. So geschieht es auch in der \textit{updateObject} Methode, welche nach dem Laden des Objektes die Funktion \textit{modifyObject} (vgl. Listing \ref{lst:modifyObject}) aufruft. 
+In \textit{updateObject} (vgl. \ref{lst:updateObject}) wird das Objekt, auf das die Operation angewendet wird, zuerst aus der Datenbank geladen. Dies ist nötig, weil es nicht möglich ist, einzelne Werte eines Objektes über die IndexedDB-Schnittstelle zu ändern, ohne die anderen Werte des Objektes dabei zu verlieren. Deshalb ist es üblich, erst das komplette Objekt zu laden, dieses anschließend zu modifizieren, um schlussendlich die modifizierte Version in der Datenbank zu speichern und die alte Version zu überschreiben. So geschieht es auch in der \textit{updateObject} Methode, welche nach dem Laden des Objektes die Funktion \textit{modifyObject} (vgl. Listing \ref{lst:modifyObject}) aufruft. 
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={modifyObject Methode}, label={lst:modifyObject}]{code/modifyObject.js}
 \end{minipage}
 
-Es kann vorkommen, dass das Objekt, welches Modifiziert werden soll, noch nicht existiert (vgl. Sektion \ref{sec:erweiterungCRDT}). Ist dies der Fall, gibt das Laden des Objektes im vorherigen Schritt \textit{undefined} zurück. Für diesen Fall, muss das Objekt in der \textit{modifyObject} Methode erst erstellt werden, bevor die Operation angewendet werden kann. Diese Anforderung ist auch in der Konzeption festgehalten (vgl. Abbildung \ref{fig:flwochartOperationen}).
+Es kann vorkommen, dass das Objekt, welches modifiziert werden soll, noch nicht existiert (vgl. Abschnitt \ref{sec:erweiterungCRDT}). Ist dies der Fall, gibt das Laden des Objektes im vorherigen Schritt \textit{undefined} zurück. In dieser Situation muss das Objekt in der \textit{modifyObject} Methode erst erstellt werden, bevor die Operation angewendet werden kann. Diese Anforderung ist auch in der Konzeption festgehalten (vgl. Abbildung \ref{fig:flwochartOperationen}).
 
-Anschließend wird die Operation angewendet, indem der in der Wert des in der Operation definierten Schlüssels mit dem neuen Wert überschrieben wird. Die Operation wird nun noch über die \textit{saveObject} Funktion (vgl. Sektion \ref{sec:lokalesIndexeddb}) in den lokalen Operationen gespeichert.
+Anschließend wird die Operation angewendet, indem der Wert des in der Operation definierten Schlüssels mit dem neuen Wert überschrieben wird. Die Operation wird nun über die \textit{saveObject} Funktion (vgl. Sektion \ref{sec:lokalesIndexeddb}) in der Datenbank der lokalen Operationen gespeichert.
 
-Zurück in der \textit{updateObject} Methode steht nur noch das Speichern den modifizierten Objektes an. Dies erfolgt über die gleiche Methode, mit welcher zuvor schon die Operation gespeichert wurde.
+Zurück in der \textit{updateObject} Methode steht nur noch das Speichern des modifizierten Objektes an. Dies erfolgt über die gleiche Methode, mit welcher zuvor schon die Operation gespeichert wurde.
 
 \section{Synchronisieren}
 
-Zum Synchronisieren werden Operationen zwischen Client und Server über eine API (siehe Sektion \ref{sec:Architektur}) ausgetauscht. In dieser Sektion wird beschrieben, wie diese Funktionalität auf Client und Server umgesetzt ist.
+Zum Synchronisieren werden Operationen zwischen Client und Server über eine API (siehe Sektion \ref{sec:Architektur}) ausgetauscht. In diesem Abschnitt wird beschrieben, wie diese Funktionalität auf Client und Server implementiert ist.
 
-Das Synchronisieren beginnt auf Seite des Clients mit dem Abrufen aller lokalen Operationen (vgl. \ref{lst:sync}). Sind die Operationen erfolgreich abgerufen, werden sie über den \textit{\textbackslash{}sync} Endpunkt der API, an den Server geschickt. 
+Das Synchronisieren beginnt auf Seite des Clients mit dem Abrufen aller lokalen Operationen (vgl. Listing \ref{lst:sync}). Sind die Operationen erfolgreich abgerufen, werden sie über den \textit{/sync} Endpunkt der API an den Server geschickt. 
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Synchronisation Client}, label={lst:sync}]{code/sync.js}
 \end{minipage}
 
-Auf dem Server werden die Operationen nach den gleichen Kriterien verarbeitet wie die Operationen des Clients (vgl. Abbildung \ref{fig:flwochartOperationen}), mit dem Unterschied dass der Server die Operationen nur Speichern und nicht Anwenden muss (vgl. \ref{sec:AufgabeServer}). Über die MongoDB Funktion \textit{insertMany} können alle Operationen auf einmal in die Datenbank geschrieben werden (vgl. Listing  \ref{lst:server1}). Wenn eine Operation bereits in der Datenbank existiert, wird sie mit \textit{insertMany} nicht erneut gespeichert. Zwar meldet MongoDB bei solchen Fällen einen Fehler, doch mit der Option \textit{ordered: false} können diese ignoriert werden.
+Auf dem Server werden die Operationen nach den gleichen Kriterien verarbeitet wie die Operationen des Clients (vgl. Abbildung \ref{fig:flwochartOperationen}) mit dem Unterschied, dass der Server die Operationen nur speichern und nicht anwenden muss (vgl. Abschnitt \ref{sec:AufgabeServer}). Über die MongoDB Funktion \textit{insertMany} können alle Operationen auf einmal in die Datenbank geschrieben werden (vgl. Listing  \ref{lst:server1}). Wenn eine Operation bereits in der Datenbank existiert, wird sie mit \textit{insertMany} nicht erneut gespeichert. Zwar meldet MongoDB bei solchen Fällen einen Fehler, doch mit der Option \textit{ordered: false} können diese ignoriert werden.
 
-Nach dem Speichern der eingehenden Operationen werden die lokalen Operationen des Servers mit der MongoDB Funktion \textit{find} geladen, und anschließend als Response an den Client geschickt. Auf diesem werden die eingehenden Operationen nun mit der \textit{processOperations} (siehe \ref{sec:processOperations}) Methode verarbeitet.
+Nach dem Speichern der eingehenden Operationen werden die lokalen Operationen des Servers mit der MongoDB Funktion \textit{find} geladen und anschließend als HTTP-Response an den Client geschickt. Auf diesem werden die eingehenden Operationen nun mit der \textit{processOperations} Methode (siehe Abschnitt \ref{sec:processOperations}) verarbeitet.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Synchronisation Server}, label={lst:server1}]{code/server1.js}
@@ -878,45 +903,98 @@ Nach dem Speichern der eingehenden Operationen werden die lokalen Operationen de
 
 \section{Löschen überflüssiger Operationen}
 
-Durch das Ständige hinzufügen von Operationen, droht die Kommunikation zwischen Client und Server auf Dauer immer langsamer zu werden. Um dies zu verhindern, sind sowohl im Client als auch im Server Maßnahmen zur Reduzierung der Menge an Operationen implementiert. Kommt es beim Verarbeiten der Operationen vor, dass zwei Operationen die selbe Kombination aus ObjectStore, Objekt, Schlüssel und Wert haben, setzt sich immer die aktuellere der beiden Operationen durch. In der Implementierung des Prototypen wird sich die ältere Operation nie durch die aktuelle durchsetzen, was bedeutet, dass die ältere Operation irrelevant. In diesem Fall wird die alte Operation gelöscht. 
+Durch das ständige Hinzufügen von Operationen droht die Kommunikation zwischen Client und Server auf Dauer immer langsamer zu werden. Um dies zu verhindern, sind sowohl im Client als auch im Server Maßnahmen zur Reduzierung der Menge an Operationen implementiert.
 
-Auf dem Client findet das Löschen alter Operationen während des Filterns der Operationen statt (vgl. \ref{sec:filtern}). In diesem Schritt werden die lokalen Operationen schließlich ohnehin mit den eingehenden Operationen verglichen. 
+Kommt es beim Verarbeiten der Operationen vor, dass zwei Operationen dieselbe Kombination aus ObjectStore, Objekt, Schlüssel und Wert haben, setzt sich immer die aktuellere der beiden Operationen durch. In der Implementierung des Prototypen wird sich die ältere Operation nie gegen die aktuelle durchsetzen, was bedeutet, dass die ältere Operation irrelevant ist. Deshalb wird die alte Operation diesem Fall gelöscht. 
+
+Auf dem Client findet das Löschen alter Operationen während des Filterns der Operationen statt (vgl. Abschnitt \ref{sec:filtern}). In diesem Schritt werden die lokalen Operationen schließlich ohnehin mit den eingehenden Operationen verglichen.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Client}, label={lst:deleteUselessOpCluient}]{code/deleteUselessOpClient.js}
 \end{minipage}
 
-\section{Zusammenfassung}
-%Es wurde Grow Only set LWW Map
-
 \chapter{Evaluation}
 
-In diesem Kapitel werden die funktionalen- und nicht-funktionalen Anforderungen reflektiert und auf Funktionalität und Vollständigkeit überprüft.
+In diesem Abschnitt wird die Umsetzung der funktionalen und nicht-funktionalen Anforderungen reflektiert und auf Funktionsfähigkeit und Vollständigkeit überprüft.
 
 \section{Anlegen, Bearbeiten und Löschen von Rezepten und Zutaten}
-Das Anlegen, Bearbeiten und Löschen von Rezepten und Zutaten funktioniert über das implementierte CRDT. Somit können diese Aktionen von der Applikation vorgenommen werden, ohne dabei direkt die Anwendungsdaten zu verändern. Stattdessen nutzt die Applikation die Schnittstelle des CRDTs zum generieren von Operationen, welche anschließend mit der \textit{processOperations} Methode angewendet werden können.
+Das Anlegen, Bearbeiten und Löschen von Rezepten und Zutaten funktioniert über das implementierte CRDT. Somit können diese Aktionen von der Applikation vorgenommen werden, ohne dabei direkt die Anwendungsdaten zu verändern. Stattdessen nutzt die Applikation die Schnittstelle des \acp{CRDT} zum Generieren von Operationen, welche anschließend mit der \textit{processOperations} Methode angewendet werden können.
 
-Die Anforderungen zum Bearbeiten und Anlegen der Objekte sind im Prototypen vollständig erfüllt, sollte dieser jedoch um komplexere Datenstrukturen erweitert werden, müsste auch das CRDT nachziehen. Da ein \ac{G-Set} umgesetzt wurde, findet das Löschen eines Objekts nicht wirklich statt, stattdessen wird die Existenz des Objektes über einen Indikator gesteuert. Somit wächst die Menge der gespeicherten Daten konstant. Auf die Funktionalität des Prototypen hat dies zwar keine Auswirkung, da die gespeicherten Datenmengen winzig sind. Für große, skalierbare Projekte sollte jedoch auf eine andere Methodik zum Löschen gesetzt werden.
+Die Anforderungen zum Bearbeiten und Anlegen der Objekte sind im Prototypen vollständig erfüllt, sollte dieser jedoch um komplexere Datenstrukturen erweitert werden, müsste auch das CRDT nachziehen. Da ein \ac{G-Set} umgesetzt wurde, findet das Löschen eines Objekts nicht wirklich statt, stattdessen wird die Sichtbarkeit des Objektes über einen Indikator gesteuert. Somit wächst die Menge der gespeicherten Daten konstant. Auf die Funktionalität des Prototypen hat dies zwar keine Auswirkung, da die gespeicherten Datenmengen winzig sind. Für große, skalierbare Projekte sollte jedoch auf eine andere Methodik zum Löschen gesetzt werden.
 
 \section{Zugriff mit mehreren Endgeräten zugleich}
-Mehrere Nutzer können zur gleichen Zeit auf die selbe Applikation zugreifen. Solange sie nicht den exakt gleichen Wert bearbeiten, sorgt die CRDT-basierte Synchronisierung dafür, dass niemand seine Arbeit verliert. Der gewählte Weg der \ac{LWW} Konfliktlösung ist ein Kompromiss, der für die Anwendung am meisten Sinn macht. Es sollte immer individuell entschieden werden, welche Art der Lösung für gleichzeitige Änderungen des selben Wertes am besten zu den Anforderungen der Applikation passt.
+Mehrere Nutzer können zur gleichen Zeit auf die selbe Applikation zugreifen. Solange sie nicht den exakt gleichen Wert bearbeiten, sorgt die CRDT-basierte Synchronisierung dafür, dass niemand seine Arbeit verliert. Der gewählte Weg der \ac{LWW} Konfliktlösung ist ein Kompromiss, der für die Anwendung am meisten Sinn ergibt. Es sollte immer individuell entschieden werden, welche Art der Lösung für gleichzeitige Änderungen desselben Wertes am besten zu den Anforderungen der Applikation passt.
+%TODO EVTL SCHLUSS FAZIT
 
 \section{Offline Erreichbarkeit}
-Die Offline Erreichbarkeit wird durch die Implementierung eines Service-Workers ermöglicht. Die Applikation ist offline vollständig Funktionsfähig, nur das Synchronisieren über den Server funktioniert natürlich nicht, wenn der Server nicht erreichbar ist. Ein Interessanter Ansatz wäre es, Synchronisation auch über andere Wege als den Server zu erlauben. Das Synchronisieren könnte schließlich auch von Client zu Client Erfolgen, da das Austauschen der lokalen Operationen alles ist, was dafür nötig ist. 
+Die Offline Erreichbarkeit wird durch die Implementierung eines Service-Workers ermöglicht. Die Applikation ist offline vollständig funktionsfähig, nur das Synchronisieren über den Server funktioniert natürlich nicht, wenn der Server nicht erreichbar ist. Der Service Worker konnte gezielt so konfiguriert werden, dass die HTTP-Requests an den Server ignoriert werden.
 
 \section{Lokales Speichern}
-Für das lokale Speichern wird IndexedDB genutzt. Da der direkte Weg über die IndexedDB-API unnötig komplex erscheint, nutzt der Prototyp die Bibliothek idb.js. Diese ermöglicht, durch das bereitstellen von Promises, einen sehr angenehmen Umgang mit der Schnittstelle. Somit können die Anwendungsdaten offline und online problemlos gespeichert und ausgelesen werden.
+Für das lokale Speichern wird IndexedDB genutzt. Da der direkte Weg über die IndexedDB-API unnötig komplex erscheint, nutzt der Prototyp die Bibliothek idb.js. Diese ermöglicht durch das Bereitstellen von Promises, einen sehr angenehmen Umgang mit der Schnittstelle. Somit können die Anwendungsdaten offline und online problemlos gespeichert und ausgelesen werden.
 
-\section{Synchronisierung von Daten}
+\section{Synchronisierung von Daten und SEC}
 
+Die Synchronisierung wird durch den Austausch von Operationen und das anschließende Anwenden eben dieser umgesetzt. Da die Clients nicht direkt miteinander kommunizieren, erfolgt dieses Austauschen über einen Server, welcher für alle Clients erreichbar ist. 
 
+%TODO SCHLECHT
+Während die Nutzung des API-Endpunktes zum Synchronisieren nur das Hin- und Herschicken von Operationen umfasst, sind die Methoden, welche die Synchronisierung ermöglichen, weitaus komplexer. Sie ermöglichen das Erzeugen und Verarbeiten der Operationen. Somit stellen die Schnittstelle zum CRDT dar, welches wiederum so konzipiert wurde, dass zwei Replikationen nach dem Synchronisieren tatsächlich konvergent sind.
 
-\section{SEC}
+Die Implementierung der Synchronisierung funktioniert für alle Änderungen an Daten, die der Nutzer vornehmen kann und ist somit in vollem Umfang erfüllt. Durch die eingebundenen Regeln bei der Anwendung von Operationen ist garantiert, dass sich zwei Clients, welche die gleichen Operationen angewendet haben, im gleichen Zustand befinden. Somit ist auch die Anforderung nach \ac{SEC} unter den Clients erfüllt. 
+
+Ein interessanter Ansatz wäre, Synchronisation auch über andere Wege als den Server zu erlauben. Das Synchronisieren könnte schließlich auch von Client zu Client erfolgen, da hierfür lediglich das gegenseitige Austauschen der lokalen Operationen nötig ist.
+
 \section{Konfliktfreies Synchronisieren}
-\section{Anschauliche Umsetzung}
+Die Anforderung des konfliktfreien Synchronisierens ist nur teilweise erfüllt. Zwar werden zwei synchronisierte Clients immer den gleichen Zustand haben, dieser kann jedoch für beide Akteure fehlerhaft sein. Dies liegt an der Nutzung der \textit{Date.now} Methode. Da sie die Systemzeit des jeweiligen Endgerätes zum Erstellen von Zeitstempeln nutzt, ist nicht garantiert, dass die neueste Operation sich durchsetzt. Somit ist die umgesetzte \enquote{LWW} Regel fehleranfällig, wenn auf den Endgeräten der Clients inkorrekte Systemzeiten eingestellt sind.
+
+Diese Anfälligkeit sollte sich jedoch mit der Nutzung einer \ac{HLC} beheben lassen. \ac{HLC} orientiert sich neben der Zeit auch an der Reihenfolge der Änderungen in der Applikation und kann somit als verlässlicher Zeitstempel in verteilten Systemen dienen \autocite[S. 1]{InproceedingsHLC}. 
+
+%TODO QUELLE
+
 \section{Unabhängigkeit von Datenbank-Technologien}
 
+Im Entwickelten Prototypen muss keine der beiden Datenbanken, sowohl auf der Clientseite noch auf der Serverseite, Funktionalitäten für das Synchronisieren der Daten bereitstellen. Somit ist die Anforderung der Unabhängigkeit von Datenbank-Technologien erfüllt. 
 
+Die Serverseitige Datenbank lediglich als zentraler Speicher von Operationen. Jede Datenbank, die in der Lage ist, Tabellen oder Objekte auszulesen und zu schreiben, sollte also qualifiziert sein, diese Aufgabe zu übernehmen. Auf der Clientseite gibt es für Webanwendungen derzeit keine Alternativen zur IndexedDB-API. 
+
+%Entwickler lokaler Anwendungen, die nicht im Browser laufen, könnten jedoch auch eine beliebige lokale Datenbank nutzen.
+
+\chapter{Fazit und Ausblick}
+
+\section{Fazit}
+
+Mit der Umsetzung des Prototypen wurde gezeigt, dass der Einsatz von CRDTs eine valide Lösung für die Synchronisierung von Applikationsdaten in Offline-First Anwendungen ist.
+
+Bei der Planung der Datenstruktur ist es wichtig, die Anforderungen, welche die Applikation erfüllen muss, und somit auch die geplante Interaktion mit den Applikationsdaten zu kennen. Im Fall des Prototypen wird das CRDT aus einer Sammlung von Grow-Only Sets, welche wiederum LWW-Maps beinhalten, gebildet. Diese CRDTs sind in Komplexität und Funktionsumfang relativ simpel, eignen sich jedoch sehr gut für die flache Datenstruktur des Prototypen. Mit 204 Zeilen JavaScript Code, was zu einer Dateigröße von 6,9kb in ausgeschriebener Fassung und 2,1kb in minimierter Version führt, ist die Implementierung des CRDT Prototypen sehr Schlank. Herausforderungen zeigen sich bei der implementierten Datenstruktur noch in der Skalierbarkeit. In dieser Hinsicht bedenklich ist, dass die Elemente des G-Sets nicht gelöscht werden können und auch die Menge der Operationen, selbst mit regelmäßigem Löschen, kontinuierlich ansteigen dürfte. Auch bedarf der Prototyp einer Erweiterung um eine sichere Methode zum erzeugen von Timestamps, da die umgesetzte Nutzung von JavaScripts \textit{Date.now} nicht zuverlässig ist. Eine bekannte Lösung für dieses Problem wäre die Implementierung einer Hybrid-Logical-Clock (HLC).
+
+Eine generelle Empfehlung zur Nutzung bestimmter CRDTs in Offline-First Webanwendungen lässt sich jedoch nicht aussprechen. Dies ist aber eher eine positive Erkenntnis, als eine negative. Wenn im Prototypen beispielsweise beim Synchronisieren das Bearbeiten stets das Löschen von Rezepten und Zutate überschreiben sollte, hat man als Entwickler die Möglichkeit das Verhalten des CRDTs anzupassen. Statt LWW-Maps würde sich dann die Umsetzung von Update-Wins-Maps anbieten. Die große Anzahl bereits erforschten, entwickelten und umgesetzten CRDTs bietet Webentwicklern eine gute Grundlage, sich passende Bausteine für die eigene, maßgeschneiderte Datenstruktur zu sichern. Dabei sollte beachtet werden, dass die Umsetzung von CRDTs nicht für jeden Anwendungsfall geeignet ist. Für komplexe Funktionalitäten kann es schwierig sein, eine CRDT-Basierte Datenstruktur umzusetzen welche den Anforderungen entspricht, ohne die Regeln der \ac{SEC} zu verletzten. In solchen Fällen lohnt sich auch ein Blick auf Bibliotheken, welche eine Reihe vorgefertigter CRDTs beinhalten wie zum Beispiel automerge\footnote{https://github.com/automerge/automerge}, yjs\footnote{https://github.com/yjs/yjs} oder js-delta-crdts\footnote{https://github.com/peer-base/js-delta-crdts}. 
+
+Ein weiterer Vorteil, den Entwickler bei der die Umsetzung einer eigenen CRDT-basierten Datenstruktur haben, ist die Unabhängigkeit von Datenbanken-Technologien. Eine Implementierung, wie sie im Prototypen erfolgt ist, kann problemlos mit dem lokalen Speichern der IndexedDB-API und einer beliebigen Server-Datenbank erfolgen. Im Gegensatz zur Verwendung spezieller Datenbanken oder \ac{DBaaS} Anbietern, welche Funktionen zum Synchronisieren von Daten bereitstellen, ist ein selbst implementiertes CRDT unabhängig von Funktionalitäten, die an bestimmte Datenbanken geknüpft sind.
+
+Die Wahl, das CRDT operation-based statt state-based umzusetzen, ist jedoch in Frage zu stellen. Die initiale Motivation, so ließe sich die Nutzlast der HTTP-Requests und Responses verringern, hat sich nicht bewahrheitet. Zwar ist es möglich, immer nur einzelne Operationen an den Server zu schicken, dies wäre jedoch kontraproduktiv. In Client-Server-Modell gibt es keine Garantie, dass der Server jede Operationen erhält, wenn diese nur einmal geschickt werden, wodurch das Verpassen einzelner Operationen möglich wäre. Somit wäre \ac{SEC} nicht mehr gewährleistet. Um dies zu vermeiden werden im Prototypen stets alle Operationen ausgetauscht werden müssen. Somit emuliert das operation-based CRDT ein state-based CRDT. Aus allen lokalen Operationen eines Clients lässt sich schließlich der ganze Zustand der Anwendung zusammensetzen. Dies ist äquivalent zu dem Halbverband, aus welchem ein state-based CRDT besteht. Im Prototypen bilden die Operationen die Elemente des Halbverbandes, wobei die obere Schranke jeweils aus den Operationen mit dem neuesten Datum für jeden Wert des Zustands besteht.
+
+\section{Ausblick}
+
+Während die Hauptanwendungsfelder von CRDTs mit Sicherheit weiterhin in den Themengebieten großer verteilter Systeme und kollaborativem Editieren bleiben werden, sind sie doch auch für den Gebrauch in Webanwendungen von Nutzen. Die Garantie, dass Offline- und Online-Daten automatisch synchronisieren ist gerade im Bereich der Offline-First Anwendungen viel Wert, da diese sonst auf bestimmte Technologien zurückgreifen müssen.
+
+Es bleibt abzuwarten wie sich Offline-First Applikationen in der Zukunft entwickeln. PWAs mitsamt Offline Funktionalität sind zwar im Web Allgegenwärtig sind und werden auch von Web-Giganten wie Twitter, Facebook und Instagram angeboten. Wahre Offline-First Apps jedoch, welche Offline komplett nutzbar sind, haben den großen kommerziellen Durchbruch noch nicht erlebt. In Ländern und Gebieten hingegen, in denen eine schlechte Internetverbindung keine Ausnahme sondern der Standard ist, wird der Bedarf nach Lösungen welche auf die lokale Nutzung ausgelegt sind jedoch stets vorhanden sein. In diesen Ländern sind Offline-First Anwendungen eine Chance für systemrelevante Bereiche wie Gesundheitswesen und Landwirtschaft die Probleme der schlechten Netzabdeckung zu überbrücken. Somit sollte auch der Einsatz von CRDTs in Offline-First Anwendungen weiter evaluiert und Optimiert werden, selbst wenn diese sich nicht als nächster großer Trend entpuppen. 
+
+Web-Entwicklern, welche sich mit dem Thema auseinandersetzen wollen, mangelt es dazu nicht an Resourcen. Durch die Jahrzehnte lange Forschung an verteilten Systemen und dem umfangreichen Forschungsstand der zu Entwicklung und Validierung von CRDTs besteht, steht genug Material zur Verfügung. Für die Zukunft gilt es, diese Erkenntnisse auf die Welt des Modernen Webs zu übertragen. Beispiele wie Automerge, ein umfangreiches JSON-ähnliches CRDT, zeigen, dass auch die Entwicklung spezieller CRDTs für das Web möglich und sinnvoll ist. 
+
+Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem Muster eines state-based CRDT umzusetzen. So könnte verglichen werden, wie diese sich in der Umsetzung und Anwendung unterscheiden. Für den Einsatz von operation-based CRDTs wäre die Nutzung einer Herangehensweise spannend, welche dafür sorgt, dass nicht alle Operationen an den Server gesendet werden müssen. Eine Technologie die dies verspricht ist zum Beispiel das $\delta$-CRDT Framework \autocite{articleDeltaCRDT}.Auch eine Kompromisslösung wäre vorstellbar, in welcher Operationen regelmäßig einzeln ausgetauscht werden, das Synchronisieren mit allen Operationen aber dennoch in regelmäßigem Abstand durchgeführt werden würde. Somit könnten Fehlerfälle korrigiert werden, und die Nutzlast des regelmäßigem Austausches wäre minimiert.
+
+
+
+
+
+
+%\item Wie können \acp{CRDT} in Offline-First Applikationen verwendet werden?
+%\item Welche \acp{CRDT} bieten sich zur Umsetzung von Offline-First Applikationen an und wie werden diese in die Datenbanken (Client und Server) implementiert?
+%\item Welche Vor- und Nachteile bietet die Nutzung von \acp{CRDT} im Vergleich zu anderen Optionen zur Synchronisierung von Daten in Offline-First Applikationen?
+
+\newpage
+\listoffigures
+\newpage
+\lstlistoflistings
 \newpage
 \printbibliography
 
