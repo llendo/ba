@@ -43,12 +43,18 @@
 \usepackage[
 backend=biber,
 sorting=none,
-citestyle=authoryear,
+style=apa,
 natbib=true
 ]{biblatex}
 \usepackage[ngerman]{babel}
 \usepackage{enumitem}
 
+\defbibfilter{literatur}{%
+	\type{book} \or \type{article} \or \type{inproceedings}
+}
+\defbibfilter{other}{%
+	\not \( \type{book} \or \type{article} \or \type{inproceedings} \or \type{online}\)
+}
 
 \setlist[enumerate]{label*=\arabic*.}
 \addbibresource{references.bib}
@@ -67,8 +73,6 @@ natbib=true
 \counterwithout{figure}{chapter}
 \counterwithout{table}{chapter}
 
-\newcommand\klammercite[1]{%
-	(\citealt{#1})}
 
 \parskip 1.75ex plus 0.5ex minus 0.5ex
 
@@ -158,7 +162,7 @@ Eine der Kernherausforderungen der Entwicklung von Offline-First Applikationen i
 Gängige Lösungen zu einer solchen Zusammenführung von Daten umfassen die Nutzung bestimmter Datenbanken-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CloudDB oder auch \ac{BaaS} Produkte wie Firebase oder IBM Cloudant, welche ebenfalls eine solche Funktionalität anbieten. Um zu vermeiden, die Applikation mit suboptimalen Datenbanken-Technologien umsetzen zu müssen, verzichten viele Applikationen bei Konflikten auf eine Synchronisation und eine/r der beiden Nutzer/innen verliert die vollbrachte Arbeit.
 
 \section{Ziel der Arbeit} 
-
+\label{zieleDerArbeit}
 Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe \acp{CRDT} umzusetzen. Der Einsatz von \acp{CRDT} ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf \acp{CRDT} aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
 
 So ergeben sich folgende Forschungsfragen:
@@ -184,7 +188,7 @@ Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte, auf welchen Offlin
 
 Seitdem hat sich die Verwendung von \acp{CRDT} in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke. Eine weitere Bibliothek, die vorgefertigte \acp{CRDT} bereitstellt ist yjs \autocite{inproceedingsYjs}. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{\acp{CRDT} for Mortals} \autocite{OnlineCrdtsForMortals}, in welchem über den Einsatz von \acp{CRDT} im Client-Server Modell gesprochen wird.  
 
-Mit Woot \klammercite{InproceedingsCRDTWoot}, Logoot \klammercite{InproceedingsCRDTLogoot} und LSEQ \klammercite{InproceedingsCRDTLSEQ} sind bereits \acp{CRDT} speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
+Mit Woot \autocite{InproceedingsCRDTWoot}, Logoot \autocite{InproceedingsCRDTLogoot} und LSEQ \autocite{InproceedingsCRDTLSEQ} sind bereits \acp{CRDT} speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
 Der Anzahl an Quellen und Ressourcen rund um \acp{CRDT} mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von \acp{CRDT} für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die \acp{CRDT} konzipiert sind, sind dem Autoren keine wissenschaftlichen Arbeiten über den konkreten Einsatz von \acp{CRDT} in Offline-First Webanwendungen bekannt. Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von \acp{CRDT} in einer Offline-First Webanwendung umzusetzen und zu ermitteln, wie dies bei der Bewältigung der Herausforderungen dieser Umgebung, helfen kann.
 
@@ -217,7 +221,7 @@ Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request, den der Servic
 
 \subsubsection{\enquote{Erst Cache, dann Netzwerk}}
 \label{sec:cachedannnetzwerk}
-Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als \ac{HTTP}-Request an den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Netzwerk-Requests in Offline-First Anwendungen.\autocite[Kapitel 05]{BookBuildingPWAs}.
+Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als \ac{HTTP}-Request an den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Netzwerk-Requests in Offline-First Anwendungen \autocite[Kapitel 05]{BookBuildingPWAs}.
 
 \begin{figure}[H]
 	\centering
@@ -249,7 +253,7 @@ Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im 
 \section{Offline First Applikationen als verteilte Systeme}\label{sec:OfflineFirstVerteiteSysteme}
 \citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzer/innen als ein einziges kohärentes System erscheint.}
 
-Die folgende Liste zeigt die Charakteristika von verteilten Systemen, zusammengefasst nach \citet{BookDistributedSystemsDefinition}.
+Die folgende Auflistung zeigt die Charakteristika von verteilten Systemen, zusammengefasst nach \citet[S. 2-3]{BookDistributedSystemsDefinition}.
 
 \begin{description}
 \item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System verbunden. Diese können sich sowohl in der Hardware als auch in der Funktionsweise unterscheiden. 
@@ -266,8 +270,8 @@ Die folgende Liste zeigt, dass funktionsfähige Offline-First Applikationen die 
 
 \begin{description}		
 \item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb die Endgeräte auch untereinander über unterschiedlichste Hardware verfügen können.
-\item[Singuläres Erscheinungsbild]Die Kernfunktionalität von Offline-First Applikationen ist die Offlinefunktionalität \autocite{OnlineGoogleOfflineFirst}. Offline interagierten Nutzer/innen nur mit ihren Endgeräten, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für die Nutzer/innen jedoch nicht von Belang. \item[Konsistente und einheitliche Interaktion]
-Unabhängig davon, welches Endgerät der/die Nutzer/in verwendet, sollen ihm/ihr früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Nutzerinnen und Nutzer müssen sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
+\item[Singuläres Erscheinungsbild]Die Grundidee hinter Offline-First Applikationen ist das Gewährleisten von möglichst umfangreicher Offlinefunktionalität \autocite{OnlineGoogleOfflineFirst}. Offline interagierten Nutzer/innen nur mit ihren Endgeräten, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für die Nutzer/innen jedoch nicht von Belang. \item[Konsistente und einheitliche Interaktion]
+Unabhängig davon, welche Endgeräte Nutzer/innen verwenden, sollen ihnen früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Nutzerinnen und Nutzer müssen sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
 \item[Kontinuierliche Verfügbarkeit]
 Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Nutzer/innen können ihre Arbeit auch fortführen, wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
 \end{description}
@@ -277,13 +281,13 @@ Daraus ergibt sich, dass es sich bei Offline-First Webanwendungen um verteilte S
 
 \section{Replikation}
 
-Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten. Datenreplikation beschreibt das Verwalten mehrerer Datenspeicher, genannt Replikationen. Diese Replikationen halten die gleichen Daten, befinden sich jedoch auf unterschiedlichen Computern \autocite[S.42]{ArticleOptimisticReplication}. \citet{BookDistributedSystemsConceptsAndDesign} nennen drei Aspekte, zu denen Replikation in verteilten Systemen entscheidend beiträgt: Performancesteigerung, erhöhte Verfügbarkeit und Fehlertoleranz. Somit trägt diese Technik entscheidend dazu bei, sowohl kontinuierliche Verfügbarkeit als auch konsistente Interaktion, beschrieben in \ref{tab:charakteristikaDistributedSystem}, zu garantieren. Vom aus dem Netz nicht mehr wegzudenkenden Caching bis hin zu aufwendigeren Aufgaben wie Load-Balancing oder der Verarbeitung von DNS-Requests bietet das Internet zahlreiche Anwendungsfelder, in denen Replikation angewendet wird. 
+Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten. Datenreplikation beschreibt das Verwalten mehrerer Datenspeicher, genannt Replikationen. Diese Replikationen halten die gleichen Daten, befinden sich jedoch auf unterschiedlichen Computern \autocite[S. 42]{ArticleOptimisticReplication}. \citet{BookDistributedSystemsConceptsAndDesign} nennen drei Aspekte, zu denen Replikation in verteilten Systemen entscheidend beiträgt: Performancesteigerung, erhöhte Verfügbarkeit und Fehlertoleranz. Somit trägt diese Technik entscheidend dazu bei, sowohl kontinuierliche Verfügbarkeit als auch konsistente Interaktion, beschrieben in \ref{tab:charakteristikaDistributedSystem}, zu garantieren. Vom aus dem Netz nicht mehr wegzudenkenden Caching bis hin zu aufwendigeren Aufgaben wie Load-Balancing oder der Verarbeitung von DNS-Requests bietet das Internet zahlreiche Anwendungsfelder, in denen Replikation angewendet wird. 
 
 \subsection{Pessimistische Replikation: Strong Consistency}
 
 Traditionelle Strategien, um die Replikationen auf dem selben Stand zu halten, folgen dem Modell der \ac{SC}. \ac{SC} setzt voraus, dass alle Replikationen stets identisch sind, als gäbe es konstant nur eine singuläre Kopie der Daten. Wenn ein Update auf einer Replikation erfolgt, muss es direkt auf allen weiteren Replikationen übernommen werden. 
 
-Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S.14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S.43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (vgl. \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
+Es gibt ein weites Spektrum an Lösungen, um \ac{SC} zu gewährleisten. Diese reichen von {Update-Everywhere} Systemen, die einzelne Änderungen sofort auf allen Replikationen speichern \autocite{ThesisUpdateEverywhere} bis zu \enquote{primary copy} Lösungen \autocite[S. 14]{BookPrimaryReplica}, welche Änderungen von einem primären Datenspeicher auf alle weiteren Replikationen verteilen. Gemeinsam haben diese Algorithmen die Tatsache, dass sie keinen Zugriff auf Replikationen gewähren, welche nicht auf dem aktuellsten Stand sind \autocite[S. 43]{ArticleOptimisticReplication}. Für Offline-First Anwendungen kommt diese Art der Replikation nicht in Frage. Die Anforderung, dass die Verbindung zum Netzwerk stets unterbrochen sein kann (vgl. \ref{sec:DefinitionOfflineFirst}), ist mit diesem Prinzip nicht vereinbar. Sobald eine Replikation vom Netzwerk getrennt ist, ist es unmöglich zu garantieren, dass sie auf dem aktuellsten Stand ist.
 
 
 \subsection{Optimistische Replikation: Eventual Consistency}
@@ -292,11 +296,11 @@ Die optimistische Replikation, auch genannt \acf{EC}, ist ein alternatives Model
 
 Die Implementierung von optimistischer Replikation bietet sich somit als Lösung für Systeme an, welche besonderen Wert auf kontinuierliche Verfügbarkeit legen, wie Offline-First Applikationen (vgl. Sektion \ref{sec:OfflineFirstVerteiteSysteme}). 
 
-Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nehmen Nutzer/innen Änderungen vor, so werden diese auf der jeweiligen Replikation sofort umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben sowie selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S.46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
+Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nehmen Nutzer/innen Änderungen vor, so werden diese auf der jeweiligen Replikation sofort umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben sowie selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S. 46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
 
 Da die Computer im System parallel Änderungen vornehmen können, kann es vorkommen, dass mehrere Replikationen das gleiche Datenobjekt modifizieren. Im Allgemeinen werden die Modifikationen zu unterschiedlichen Ergebnissen führen. Ist dies der Fall, spricht man von einem Konflikt. Das Ziel, Konvergenz zwischen den Replikationen zu erlangen, kann nur erreicht werden, wenn aus allen im Konflikt stehenden Änderungen eine einheitliche Lösung entsteht.
 
-Deshalb muss ein System, welches \ac{EC} implementiert, die Funktionalität aufweisen, Konflikte zu beheben. Problematisch dabei ist, dass die Replikationen nicht auf dem gleichen Stand sind, bis der Konflikt vollständig behoben ist, selbst nachdem sie ihre Änderungen untereinander ausgetauscht haben. Der Prozess der Konfliktbehandlung kann voraussetzen, auf die manuelle Konfliktlösung von Nutzer/innen oder die Daten anderer Replikationen zu warten \autocite{ArticleEventualConsistencyConflicts}.
+Deshalb muss ein System, welches \ac{EC} implementiert, die Funktionalität aufweisen, Konflikte zu beheben. Problematisch dabei ist, dass die Replikationen nicht auf dem gleichen Stand sind, bis der Konflikt vollständig behoben ist, selbst nachdem sie ihre Änderungen untereinander ausgetauscht haben. Der Prozess der Konfliktbehandlung kann voraussetzen, auf die manuelle Konfliktlösung von Nutzer/innen oder die Daten anderer Replikationen zu warten \autocite[S.~174-175]{ArticleEventualConsistencyConflicts}.
 
 Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herausforderung, wie in Abschnitt \ref{sec:Problemfeld} ausgeführt wird. Um diese Herausforderung zu bewältigen, bietet das Modell der \acf{SEC} einen Ansatz, die Flexibilität von \ac{EC} um die Sicherheit von \ac{SC} zu erweitern. 
 
@@ -321,7 +325,7 @@ Gerade in Offline-First Anwendungen ist die Konfliktbehandlung eine große Herau
 
 \acp{CRDT} sind abstrakte Datentypen, die in verteilten Systemen eingesetzt werden, um \ac{SEC} zu ermöglichen. Sie basieren auf klassischen Datentypen wie Registern, Sets und Maps. \acp{CRDT} erweitern diese Datentypen um eine Schnittstelle, welche das Daten-Objekt neben den klassischen Operationen wie dem Auslesen des gespeicherten Wertes um zusätzliche Funktionalitäten erweitert, um \ac{SEC} zu gewährleisten \autocite[S.~1]{ArticleCRDTOverview}. 
 
-Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Wertes des Objekts. Weitere Daten, um welche \acp{CRDT} klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (vgl. Abschnitt \ref{sec:lwwRegister}).
+Der Satz an CRDT-Funktionalitäten enthält immer eine Funktion zum Aktualisieren des Objekts. Weitere Daten, um welche \acp{CRDT} klassische Datentypen erweitern, lassen sich als Metadaten beschreiben. Ihr Zweck ist es, die Aktualisierungs-Funktionalität möglich zu machen. Soll ein CRDT-Objekt beispielsweise so aktualisiert werden, dass sich die neueste Änderung des Wertes immer gegen ältere durchsetzt, muss zusätzlich zum Wert noch ein Zeitstempel der letzten Änderung verwaltet werden (vgl. Abschnitt \ref{sec:lwwRegister}).
 %todo: Abbildung CRDT mit Value, Merge, Zusatz
 Die Datentypen werden speziell so modelliert, dass das Aktualisieren von \acp{CRDT} kommutativ, assoziativ und idempotent erfolgen kann \autocite{InproceedingsCrdtsInProduction}.
 
@@ -352,12 +356,12 @@ Beide Kategorien sind äquivalent \autocite[S. 9]{InproceedingsCRDTOriginal}, wa
 %todo hier ein paar beispiele oder so ka
 
 \subsection{Last-Write-Wins Register}
-\label{lwwRegister}
+\label{sec:lwwRegister}
 \sloppypar
 Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
 \subsection{Last-Write-Wins Map}
-\label{lwwMap}
+\label{sec:lwwMap}
 \sloppypar
 Während ein \ac{LWW-Register} ein einzelnes Schlüssel-Wert Paar darstellt, besteht eine LWW-Map aus einem bis beliebig vielen LWW-Registern \autocite[43]{PhdthesisLwwMap}.
 
@@ -386,9 +390,9 @@ In diesem Abschnitt werden die funktionalen und nicht-funktionalen Anforderungen
 
 \subsection{Funktionale Anforderungen}
 \label{sec:funktionaleAnforderungen}
-Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität des zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darüber geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (vgl. \ref{sec:Einleitung}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und \acp{CRDT}.
+Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität des zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darüber geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (vgl. Abschnitt \ref{sec:zieleDerArbeit}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und \acp{CRDT}.
 
-Üblich in einer Anforderungsanalyse ist, Anforderungen in die Kategorien notwendig(\enquote{muss}), wünschenswert(\enquote{soll}) und möglich(\enquote{kann}) einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf notwendige Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essenziell für das System sind.
+Üblich in einer Anforderungsanalyse ist, Anforderungen in die Kategorien notwendig (\enquote{muss}), wünschenswert (\enquote{soll}) und möglich (\enquote{kann}) einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf notwendige Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essenziell für das System sind.
 
 \begin{description}
 	\item[{[A 01]} Anlegen von Rezepten]
@@ -429,7 +433,7 @@ Da Daten sowohl online als auch offline gespeichert werden sollen, folgt die Ums
 
 Dass der Prototyp als Offline-First Anwendung umgesetzt wird und umfangreiche Offlinefunktionalität zentraler Bestandteil der funktionalen Anforderungen ist, wirkt sich entscheidend auf die Architektur aus.
 
-Die Nutzung eines Service-Workers (vgl. \ref{sec:serviceworker}) ermöglicht das Zwischenspeichern der gesamten Client-seitigen Dateien, welche zum Ausführen der Applikation benötigt werden. Da die Speicherung der Anwendungsdaten auch lokal erfolgen soll, ist die Anwendung nicht darauf angewiesen, bei jeder Aktion der Nutzer/innen Daten an den Server zu schicken. Die Applikation ist bewusst so gestaltet, dass ein Synchronisieren nur stattfindet, wenn der ein entsprechender Knopf den Prozess startet. In einer Applikation welche veröffentlicht werden soll, wäre es Sinnvoll, diesen Prozess öfter im Hintergrund auszuführen. Im Prototypen wäre es dadurch jedoch schwieriger die Zustände \enquote{synchronisiert} und \enquote {nicht synchronisiert} darzustellen. 
+Die Nutzung eines Service-Workers ermöglicht das Zwischenspeichern der gesamten Clientseitigen Dateien, welche zum Ausführen der Applikation benötigt werden. Da die Speicherung der Anwendungsdaten auch lokal erfolgen soll, ist die Anwendung nicht darauf angewiesen, bei jeder Aktion der Nutzer/innen Daten an den Server zu schicken. Die Applikation ist bewusst so gestaltet, dass ein Synchronisieren nur stattfindet, wenn der ein entsprechender Knopf den Prozess startet. In einer Applikation welche veröffentlicht werden soll, wäre es Sinnvoll, diesen Prozess öfter im Hintergrund auszuführen. Im Prototypen wäre es dadurch jedoch schwieriger die Zustände \enquote{synchronisiert} und \enquote {nicht synchronisiert} darzustellen. 
 
 \begin{figure}[H]
 	\centering
@@ -440,13 +444,13 @@ Die Nutzung eines Service-Workers (vgl. \ref{sec:serviceworker}) ermöglicht das
 
 Abbildung \ref{fig:architektur} zeigt die Architektur des Prototypen. Die Clientseite setzt sich zusammen aus Frontend, Geschäftslogik und der Browser-API IndexedDB als lokalen Speicher. Zusätzlich wird die JavaScript-Bibliothek idb.js für den Zugriff auf IndexedDB genutzt. Die CRDT Funktionalitäten befinden sich in dieser Darstellung in der Geschäftslogik. 
 
-Die Serverseite beginnt mit einer API, welche nur einen einzelnen Endpunkt (/sync) zur Synchronisierung von lokalen und Online-Daten bereitstellt. Über diese Schnittstelle kann der Client seine Operationen an den Server schicken und erhält als Antwort die gesammelten Operationen des Servers. Das server-seitige Speichern der Applikationen erfolgt auf einer MongoDB Datenbank. Ergänzend zu MongoDB wird noch die Bibliothek Mongoose genutzt. Als Laufzeitumgebung zum Betreiben des Webservers dient Node.js. Eine ausführliche Erläuterung, aus welchen Gründen die bestimmten Technologien genutzt werden, findet sich in Abschnitt \ref{sec:Technologien}.
+Die Serverseite beginnt mit einer API, welche nur einen einzelnen Endpunkt (/sync) zur Synchronisierung von lokalen und Online-Daten bereitstellt. Über diese Schnittstelle kann der Client seine Operationen an den Server schicken und erhält als Antwort die gesammelten Operationen des Servers. Das serverseitige Speichern der Applikationen erfolgt auf einer MongoDB Datenbank. Ergänzend zu MongoDB wird noch die Bibliothek Mongoose genutzt. Als Laufzeitumgebung zum Betreiben des Webservers dient Node.js. Eine ausführliche Erläuterung, aus welchen Gründen die bestimmten Technologien genutzt werden, findet sich in Abschnitt \ref{sec:Technologien}.
 
 
 
 \section{Entwurf der Nutzeroberfläche}
 
-Aus den funktionalen Anforderungen (Abschnitt \ref{sec:funktionaleAnforderungen}) lässt sich ein Entwurf für die Nutzeroberfläche des Prototypen erstellen. Abbildung \ref{fig:rezepteFrame} zeigt den Hauptbildschirm der Website. Hier können Nutzer/innen Rezepte hinzufügen, löschen und die Namen der angelegten Rezepte bearbeiten. Der \enquote{Sync} Button initialisiert das Synchronisieren mit dem Server. Über den Knopf \enquote{Zutaten} gelangen Nutzer/innen zur Übersicht der Zutaten des jeweiligen Rezepts. Wie auf Abbildung \ref{fig:zutatenFrame} zu erkennen ist, können Nutzer/innen hier neue Zutaten für das Rezept anlegen und bestehende Zutaten bearbeiten oder löschen. Darüber hinaus können sie jeder angelegten Zutat eine Menge zuweisen und auch diese bearbeiten. 
+Aus den funktionalen Anforderungen (siehe Abschnitt \ref{sec:funktionaleAnforderungen}) lässt sich ein Entwurf für die Nutzeroberfläche des Prototypen erstellen. Abbildung \ref{fig:rezepteFrame} zeigt den Hauptbildschirm der Website. Hier können Nutzer/innen Rezepte hinzufügen, löschen und die Namen der angelegten Rezepte bearbeiten. Der \enquote{Sync} Button initialisiert das Synchronisieren mit dem Server. Über den Knopf \enquote{Zutaten} gelangen Nutzer/innen zur Übersicht der Zutaten des jeweiligen Rezepts. Wie auf Abbildung \ref{fig:zutatenFrame} zu erkennen ist, können Nutzer/innen hier neue Zutaten für das Rezept anlegen und bestehende Zutaten bearbeiten oder löschen. Darüber hinaus können sie jeder angelegten Zutat eine Menge zuweisen und auch diese bearbeiten. 
 
 \begin{figure}[H]
 	\centering
@@ -465,11 +469,8 @@ Aus den funktionalen Anforderungen (Abschnitt \ref{sec:funktionaleAnforderungen}
 	\end{minipage}
 \end{figure}
 
-\subsection{Optimistic UI}
 \label{sec:optimisticUI}
-Wenn der User eine Änderung über die Nutzeroberfläche einleitet, bekommt er diese schon zu sehen, bevor die Änderung in der Datenbank gespeichert wurde. Diese Praxis nennt sich Optimistic UI und ist ein gängiges Mittel um die Usability in modernen Applikationen zu steigern \autocite{ArticleOptimisticUI}.
-
-
+Wenn Nutzer/innen Änderungen über die Nutzeroberfläche einleiteten, bekommen sie diese schon zu sehen, bevor die Änderung in der Datenbank gespeichert wurde. Diese Praxis nennt sich Optimistic UI und ist ein gängiges Mittel um die Usability in modernen Applikationen zu steigern \autocite{ArticleOptimisticUI}.
 
 \section{Datenstruktur}
 \label{sec:Datenstruktur}
@@ -508,9 +509,9 @@ Eine Option, die Datenstruktur abzuflachen, besteht darin, die in Listing \ref{l
 \label{sec:erweiterungCRDT}
 Während sich bei konventionellen Datentypen nicht viel dadurch ändert, ob eine Zutat über \enquote{recipe.ingredient}, wie es in Listing \ref{lst:rezeptv1} der Fall wäre, oder \enquote{ingredient}, vgl. Listing \ref{lst:rezeptv2} angesprochen wird, wäre die Umsetzung als CRDT in der verschachtelten Variante deutlich komplexer. Die Ursache dafür ist, dass die Änderungen an Zutaten schließlich auch von CRDT-Funktionalitäten profitieren sollten. Das Modell für ein Rezept müsste deshalb als CRDT entworfen werden, welches ein weiteres CRDT als Eigenschaft hält. Dies ist in der Umsetzung durchaus möglich, in diesem Fall aber leicht durch die relationale Herangehensweise zu vermeiden.
 
-Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, sondern eines, welches den Anforderungen der Anwendung gerecht wird, gilt es nun zu ermitteln, welche Schnittstellen es der Applikation zur Verfügung stellen muss. Aus der Anforderungsanalyse, welche in in Sektion \ref{sec:anforderungsanalyse} durchgeführt wurde, lassen sich die Anforderungen an das CRDT ableiten. Tabelle \ref{tab:crdtAnforderungen} fasst diese als Schnittstellen zusammen, welche die Datenstruktur der Applikation bereitstellen muss. 
+Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, sondern eines, welches den Anforderungen der Anwendung gerecht wird, gilt es nun zu ermitteln, welche Schnittstellen es der Applikation zur Verfügung stellen muss. Aus der Anforderungsanalyse, welche in in Abschnitt \ref{sec:anforderungsanalyse} durchgeführt wurde, lassen sich die Anforderungen an das CRDT ableiten. Tabelle \ref{tab:crdtAnforderungen} fasst diese als Schnittstellen zusammen, welche die Datenstruktur der Applikation bereitstellen muss. 
 
-\begin{table}[]
+\begin{table}[H]
 	\caption{CRDT Schnittstellen}
 	\label{tab:crdtAnforderungen}
 	\resizebox{\textwidth}{!}{%
@@ -530,7 +531,7 @@ Da in der Applikation kein universell einsetzbares CRDT entworfen werden soll, s
 
 Die Umsetzung im Prototypen erfolgt durch ein \enquote{Operation-based} CRDT. Da beide möglichen Formen gleichwertig sind (vgl. Abschnitt \ref{sec:stateopbased}) wurde diese Entscheidung getroffen weil \enquote{Operation-based} \acp{CRDT} unter Umständen eine geringere Nutzlast für \ac{HTTP}-Requests und Responses bei der Synchronisierung verursachen. Dies liegt daran, dass \enquote{Operation-based} \acp{CRDT} nicht darauf angewiesen sind, ihren gesamten Zustand auszutauschen (vgl. ebenfalls Abschnitt \ref{sec:stateopbased}).
 
-Wie in Sektion \ref{sec:stateopbased} erläutert, werden alle Änderungen, welche an den Applikationsdaten erfolgen, einzeln als Operationen abgespeichert. Wie Rezepte und Zutaten werden auch die Operationen über die IndexedDB-API lokal im Browser gespeichert. Neben der Funktion zum Erzeugen von Operationen muss das CRDT auch eine Funktion zum Anwenden der Operationen implementieren. 
+Wie in Abschnitt \ref{sec:stateopbased} erläutert, werden alle Änderungen, welche an den Applikationsdaten erfolgen, einzeln als Operationen abgespeichert. Wie Rezepte und Zutaten werden auch die Operationen über die IndexedDB-API lokal im Browser gespeichert. Neben der Funktion zum Erzeugen von Operationen muss das CRDT auch eine Funktion zum Anwenden der Operationen implementieren. 
 
 Listing \ref{lst:operationv1} zeigt eine Operation, welche beim Umbenennen des in Listing \ref{lst:rezeptv2} entworfenen Rezeptes erzeugt und gespeichert wird. Die Felder \enquote{store}, \enquote{object} und  \enquote{key} dienen der Identifikation des Wertes, der geändert werden soll, \enquote{value} beschreibt den neuen Wert. Die dargestellte Operation dokumentiert also, dass im Object-Store \enquote{recipes} der Wert des Schlüssels \enquote{name} vom Objekt \enquote{re\_ckdiw1bxw002411w66m7mol85s} zu \enquote{Tomaten-Paprika-Salat} geändert werden soll. Darüber hinaus erhält die Operation noch eine eigene ID und einen Zeitstempel. Der Zeitstempel dient dazu, eine konfliktfreie Synchronisation zu gewährleisten, mehr dazu im nächsten Abschnitt. 
 
@@ -559,7 +560,7 @@ Im Prototypen werden parallele Änderungen mit \ac{LWW} Regeln behandelt, wodurc
 
 Auch beim Anwenden von Operationen gilt es, einigen potentiellen Fehlern aus dem Weg zu gehen. Da die Operationen kommutativ anwendbar sein sollen, kann es vorkommen, dass ein Objekt bearbeitet werden soll, welches lokal noch nicht existiert. Damit eine solche Änderung nicht verloren geht, wird das Objekt beim Anwenden der Änderung erstellt, sollte es noch nicht existieren. Wichtig hierbei ist, dass das neue Objekt keine zufällige ID zugewiesen bekommt, sondern die in der Operation hinterlegte ID des fehlenden Objektes. Anschließend kann die Operation wie vorgesehen auf das neue Objekt angewandt werden. Durch diese Semantik ist es möglich, die \enquote{Erstellen} und \enquote{Bearbeiten} Schnittstellen (vgl. Tabelle \ref{tab:crdtAnforderungen}) mit der gleichen Methode umzusetzen. Eine Operation zum Erstellen eines Objektes wird einfach genau wie eine Operation zum Bearbeiten angelegt, statt einer bestehenden ID beim Bearbeiten wird jedoch eine neue ID erzeugt. Somit wird das Objekt beim Anwenden der Operation erzeugt, da es sich um eine unbekannte ID handelt. 
 
-Ein weiterer Fehlerfall droht beim Entfernen von Rezepten und Zutaten, welches neben dem Anlegen und Bearbeiten auch eine weitere Schnittstelle zur Datenstruktur ist (vgl. Tabelle \ref{tab:crdtAnforderungen}). Abbildung \ref{fig:rezeptLöschenSchlecht} zeigt die Problematik, welche auftritt, wenn das Objekt tatsächlich aus der Datenbank gelöscht wird. Wird ein Objekt gelöscht und anschließend bearbeitet, kommt die Applikation nicht auf den gleichen Stand wie, wenn die Operationen in umgekehrter Reihenfolge angewendet werden. Das liegt daran, dass das gelöschte Objekt beim anschließenden Bearbeiten wieder erzeugt wird. 
+Ein weiterer Fehlerfall droht beim Entfernen von Rezepten und Zutaten, welches neben dem Anlegen und Bearbeiten auch eine weitere Schnittstelle zur Datenstruktur ist (vgl. Tabelle \ref{tab:crdtAnforderungen}). Abbildung \ref{fig:rezeptLöschenSchlecht} zeigt die Problematik, welche auftritt, wenn das Objekt tatsächlich aus der Datenbank gelöscht wird. Wird ein Objekt gelöscht und anschließend bearbeitet, kommt die Applikation nicht auf den gleichen Stand wie wenn die Operationen in umgekehrter Reihenfolge angewendet werden. Das liegt daran, dass das gelöschte Objekt beim anschließenden Bearbeiten wieder erzeugt wird. 
 
 Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könnten sich nach dem Synchronisieren unterscheiden. 
 
@@ -570,7 +571,7 @@ Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könn
 	\label{fig:rezeptLöschenSchlecht}
 \end{figure}
 
-Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Sektion \ref{sec:g-set}) implementiert. Dies bedeutet, dass die Elemente des Sets, also die Rezepte und Zutaten, nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \textit{tombstone}. Beim \textit{tombstone}, Englisch für Grabstein, handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
+Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Abschnitt \ref{sec:g-set}) implementiert. Dies bedeutet, dass die Elemente des Sets, also die Rezepte und Zutaten, nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \textit{tombstone}. Beim \textit{tombstone}-Wert handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language=JavaScript, caption={Beispiel Entfernen-Operation}, label={lst:operationv2}]{code/operationTombstone.js}
@@ -592,7 +593,7 @@ Da die Replikationen im Client-Server Modell nicht direkt miteinander kommunizie
 \subsection{Aufgabe des Servers}
 \label{sec:AufgabeServer}
 
-Voraussetzung eines \enquote{operation-based} \acp{CRDT} ist es, die erzeugten Operationen verlässlich an die anderen Replikationen des Systems, im Falle des Prototypen also die anderen Clients, zu verteilen (vgl. Sektion \ref{sec:CRDTs}). Deshalb dient der Server in der Umsetzung des Prototypen als eine Art Cloud-Speicher für Operationen, auf dessen Schnittstelle alle Clients Zugriff haben. 
+Voraussetzung eines \enquote{operation-based} \acp{CRDT} ist es, die erzeugten Operationen verlässlich an die anderen Replikationen des Systems, im Falle des Prototypen also die anderen Clients, zu verteilen (vgl. Abschnitt \ref{sec:CRDTs}). Deshalb dient der Server in der Umsetzung des Prototypen als eine Art Cloud-Speicher für Operationen, auf dessen Schnittstelle alle Clients Zugriff haben. 
 
 \subsection{API}
 
@@ -978,7 +979,7 @@ Die Wahl, das CRDT operation-based statt state-based umzusetzen, ist jedoch in F
 
 Während die Hauptanwendungsfelder von CRDTs mit Sicherheit weiterhin in den Themengebieten großer verteilter Systeme und kollaborativem Editieren bleiben werden, sind sie doch auch für den Gebrauch in Webanwendungen von Nutzen. Die Garantie, dass Offline- und Online-Daten automatisch synchronisieren ist gerade im Bereich der Offline-First Anwendungen viel Wert, da diese sonst auf bestimmte Technologien zurückgreifen müssen.
 
-Es bleibt abzuwarten wie sich Offline-First Applikationen in der Zukunft entwickeln. PWAs mitsamt Offline Funktionalität sind zwar im Web Allgegenwärtig sind und werden auch von Web-Giganten wie Twitter, Facebook und Instagram angeboten. Wahre Offline-First Apps jedoch, welche Offline komplett nutzbar sind, haben den großen kommerziellen Durchbruch noch nicht erlebt. In Ländern und Gebieten hingegen, in denen eine schlechte Internetverbindung keine Ausnahme sondern der Standard ist, wird der Bedarf nach Lösungen welche auf die lokale Nutzung ausgelegt sind jedoch stets vorhanden sein. In diesen Ländern sind Offline-First Anwendungen eine Chance für systemrelevante Bereiche wie Gesundheitswesen und Landwirtschaft die Probleme der schlechten Netzabdeckung zu überbrücken. Somit sollte auch der Einsatz von CRDTs in Offline-First Anwendungen weiter evaluiert und Optimiert werden, selbst wenn diese sich nicht als nächster großer Trend entpuppen. 
+Es bleibt abzuwarten wie sich Offline-First Applikationen in der Zukunft entwickeln. PWAs mitsamt Offline Funktionalität sind zwar im Web Allgegenwärtig sind und werden auch von Web-Giganten wie Twitter, Facebook und Instagram angeboten. Wahre Offline-First Apps jedoch, welche Offline komplett nutzbar sind, haben den großen kommerziellen Durchbruch noch nicht erlebt. In Ländern und Gebieten hingegen, in denen eine schlechte Internetverbindung keine Ausnahme sondern der Standard ist, wird der Bedarf nach Lösungen welche auf die lokale Nutzung ausgelegt sind jedoch stets vorhanden sein. In diesen Ländern sind Offline-First Anwendungen eine Chance für systemrelevante Bereiche, wie Gesundheitswesen und Landwirtschaft, die Probleme der schlechten Netzabdeckung zu überbrücken. Somit sollte auch der Einsatz von CRDTs in Offline-First Anwendungen weiter evaluiert und Optimiert werden, selbst wenn diese sich nicht als nächster großer Trend entpuppen. 
 
 Webentwicklern und Webentwicklerinnen, welche sich mit dem Thema auseinandersetzen wollen, mangelt es dazu nicht an Resourcen. Durch die Jahrzehnte lange Forschung an verteilten Systemen und dem umfangreichen Forschungsstand der zu Entwicklung und Validierung von CRDTs besteht, steht genug Material zur Verfügung. Für die Zukunft gilt es, diese Erkenntnisse auf die Welt des Modernen Webs zu übertragen. Beispiele wie Automerge, ein umfangreiches JSON-ähnliches CRDT, zeigen, dass auch die Entwicklung spezieller CRDTs für das Web möglich und sinnvoll ist. 
 
@@ -998,7 +999,9 @@ Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem M
 \newpage
 \lstlistoflistings
 \newpage
-\printbibliography
+\printbibliography[title ={Literaturquellen}, filter=literatur]
+\printbibliography[type=online, title ={Onlinequellen}]
+\printbibliography[filter=other, title = {Weitere Quellen}]
 
 
 \end{document}]
