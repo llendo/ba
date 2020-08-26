@@ -806,7 +806,7 @@ Aufgrund der Länge der \textit{processOperations} Methode wird diese in der fol
 Der Erste Schritt der \textit{processOperations} Funktion ist das Laden der lokalen Operationen. Dies ist notwendig, weil die eingehenden Operationen im weiteren Verlauf der Methode mit den lokalen Operationen verglichen werden müssen. Wie Listing \ref{lst:processOperations1} zeigt, erfolgt das Laden der lokalen Operationen mit der im vorherigen Abschnitt (vgl. \ref{sec:lokalesIndexeddb}) beschriebenen Funktion \textit{getAllFromStore}.
 
 \begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={processOperations, Teil 1}, label={lst:processOperations1}]{code/processOperations1.js}
+	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Teil 1}, label={lst:processOperations1}]{code/processOperations1.js}
 \end{minipage}
 
 Sobald die lokalen Operationen geladen sind, wird mit der Methode \textit{mapOperations} (vgl. Listing \ref{lst:mapOperations}) noch eine Vorkehrung für das Filtern im nächsten Schritt getroffen. \textit{mapOperations} gibt ein Promise zurück, welches beim auflösen ein \textit{Map} Objekt zurückgibt. Eine \textit{Map} wird verwendet, da sie das auch Objekte als Keys erlaubt, in diesem Fall eignet sich dies perfekt um zwei Operationen gegenüberzustellen. Ziel ist es hier, zu jeder eingehenden Operation eine lokale Operation zu finden, deren Zielwert übereinstimmt. Zielwert bedeutet hier die Kombination aus ObjectStore, Objekt und Schlüssel. 
@@ -827,7 +827,7 @@ Daraufhin werden die eingehende Operation und die passende, lokale Operation zu 
 Mit der zurückgegebenen Map von eingehenden zu lokalen Operationen kann das Filtern beginnen. In \textit{processOperations} werden die \textit{mappedOperations} nun an die Funktion \textit{filterOperationsToApply} weitergegeben (vgl. Listing \ref{lst:processOperations2}).
 
 \begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={processOperations, Teil 2}, label={lst:processOperations2}]{code/processOperations2.js}
+	\lstinputlisting[language = Javascript, caption={Verarbeiten der Operationen, Teil 2}, label={lst:processOperations2}]{code/processOperations2.js}
 \end{minipage}
 
 Ziel des Filterns ist es, zu ermitteln, ob die eingehenden Operationen angewendet werden dürfen oder nicht. Die Regeln, nach welchen entschieden wird, welche Operationen angewendet werden und welche nicht, werden aus der Konzeption übernommen (vgl. Abbildung \ref{fig:flwochartOperationen}). Das vorherige Zuordnen der lokalen zu den eingehenden Operationen erleichtert diesen Vorgang, da somit nicht während des Filterns nach den passenden lokalen Operationen gesucht werden muss. Technisch wäre es zwar durchaus möglich, das Zuordnen von lokalen zu eingehenden Operationen während des Filterns durchzuführen, die Konsequenz wäre jedoch verschachtelter, schwer lesbarer Code.
@@ -871,7 +871,7 @@ Listing \ref{lst:processOperations3} zeigt die Fortsetzung der \textit{processOp
 Die erste \textit{Promise.all} Methode bekommt für jeden Schlüssel in der \textit{validOperationsMap} eine weitere \textit{Promise.all} Methode als Input. Diese weiteren \textit{Promise.all} Methoden bekommen für jede Operation in dem entsprechenden ObjectStore ein \textit{updateObject} Promise als Input. Das erste \textit{Promise.all} sorgt also dafür, dass jeder ObjectStore, der aktualisiert werden muss, aktualisiert wird. Die weiteren \textit{Promise.all} Methoden, jeweils eine pro ObjectStore, stellen sicher, dass für jede Operation die \textit{updateObejct} Methode aufgerufen wird.
 
 \begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={updateObject Methode, Teil 1}, label={lst:updateObject}]{code/updateObject.js}
+	\lstinputlisting[language = Javascript, caption={Aktualisieren eines Objekts}, label={lst:updateObject}]{code/updateObject.js}
 \end{minipage}
 
 In \textit{updateObject} (vgl. \ref{lst:updateObject}) wird das Objekt, auf das die Operation angewendet wird, zuerst aus der Datenbank geladen. Dies ist nötig, weil es nicht möglich ist, einzelne Werte eines Objektes über die IndexedDB-Schnittstelle zu ändern, ohne die anderen Werte des Objektes dabei zu verlieren. Deshalb ist es üblich, erst das komplette Objekt zu laden, dieses anschließend zu modifizieren, um schlussendlich die modifizierte Version in der Datenbank zu speichern und die alte Version zu überschreiben. So geschieht es auch in der \textit{updateObject} Methode, welche nach dem Laden des Objektes die Funktion \textit{modifyObject} (vgl. Listing \ref{lst:modifyObject}) aufruft. 
@@ -914,6 +914,12 @@ Auf dem Client findet das Löschen alter Operationen während des Filterns der O
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Client}, label={lst:deleteUselessOpCluient}]{code/deleteUselessOpClient.js}
+\end{minipage}
+
+Um zu verhindern, dass überflüssige Operationen auf dem Server gespeichert bleiben, wird für jede eingehende Operation nach einer älteren lokalen Operation gesucht, die den gleichen Wert bearbeitet (vgl. Listing \ref{lst:deleteUselessOpServer}). Wird eine solche Operation gefunden, wird sie aus der Datenbank gelöscht. Anschließend wird noch überprüft, ob sich die gerade gelöschte Operation auch in den eingehenden Operationen befindet. Ist dies der Fall, wird sie auch dort gelöscht, damit sie nicht direkt wieder in die Datenbank geschrieben wird.
+
+\begin{minipage}{\linewidth}
+	\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Server}, label={lst:deleteUselessOpServer}]{code/deleteUselessOpServer.js}
 \end{minipage}
 
 \chapter{Evaluation}
@@ -1002,6 +1008,53 @@ Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem M
 \printbibliography[title ={Literaturquellen}, filter=literatur]
 \printbibliography[type=online, title ={Onlinequellen}]
 \printbibliography[filter=other, title = {Weitere Quellen}]
+\newpage
+\section*{Anhang zum Prototypen}
+\subsection*{Wo finde Ich den Prototypen?}
+Der Code des Prototypen befindet sich in den folgenden öffentlichen GitHub repositories:
+
+Client: https://github.com/llendo/crdt-app\\
+Server: https://github.com/llendo/crdt-app-server
+
+
+Zusätzlich ist der Prototyp auch als gehostete Website erreichbar unter: 
+
+https://thesis-recipebook.netlify.app/
+
+Der Server ist gehostet auf: 
+
+https://crdt-app-server.herokuapp.com/
+
+
+Sowohl Client als auch Server sind in der gehosteten Version auf dem gleichen Stand wie die GitHub repositories. 
+
+\subsection*{Wie setzte Ich den Prototypen lokal auf?}
+
+\subsubsection*{Client}
+Der Client lässt sich einfach über das Aufrufen der index.html über einen lokalen Webserver starten. Wenn ein lokaler Server zum Synchronisieren genutzt werden soll, muss die URL in der Funktion \textit{sync} in der Datei crdt.js, durch die des lokalen Servers ersetzt werden.
+
+\subsubsection*{Server}
+Zum lokalen Starten des Servers wird node.js benötigt (https://nodejs.org/). \\
+Ist node installiert, muss im Ordner crdt-app-server einmal \textit{npm i} über die Kommandozeile ausgeführt werden. \\
+Anschließend kann der Server über den Befehl \textit{node server.js} gestartet werden.
+
+Damit die gehostete Version funktioniert, verbindet sich der Server mit einem Online-Datenbank-Cluster, auf dem sich die MongoDB Datenbank befindet. Soll eine lokale MongoDB genutzt werden, muss in der Datei db.config.js der \textit{url:} Connection String durch den Connection String einer lokalen MongoDB Datenbank ersetzt werden. 
+
+\thispagestyle{empty}
+\newpage
+\thispagestyle{empty}
+\section*{Erklärung über das eigenständige Erstellen der Arbeit}
+	Hiermit versichere ich, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe. Die Stellen der Arbeit, die anderen Werken dem Wortlaut oder dem Sinn nach entnommen wurden, sind durch Angaben der Herkunft kenntlich gemacht.
+	
+	Diese Erklärung erstreckt sich auch auf in der Arbeit enthaltene Grafiken, Skizzen, bildliche Darstellungen sowie auf Quellen aus dem Internet.
+	Die Arbeit habe ich in gleicher oder ähnlicher Form auch auszugsweise noch nicht als Bestandteil einer Prüfungs- oder Studienleistung vorgelegt. 
+	
+	Ich versichere, dass die eingereichte elektronische Version der Arbeit vollständig mit der Druckversion übereinstimmt.
+	
+	Lennart Ploog \\
+	Matrikelnr.: 354556\\
+	Bremen, den 28.08.2020\\
+
 
 
 \end{document}]
