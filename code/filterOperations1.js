@@ -2,14 +2,14 @@ function filterOperationsToApply(mappedOperations) {
   return new Promise((resolve, reject) => {
     let recipeOperationsToApply = [];
     let ingredientOperationsToApply = [];
-    Array.from(mappedOperations.keys()).forEach((newOp) => {
-    let localOp = mappedOperations.get(newOp);
+    Array.from(mappedOperations.keys()).forEach((newOperation) => {
+    let localOperation = mappedOperations.get(newOperation);
     if (
-      !localOp ||
-      newOp.timestamp > localOp.timestamp
+      !localOperation ||
+      newOperation.timestamp > localOperation.timestamp
     ) {
-      if (newOp.store == "recipes") {
-      recipeOperationsToApply.push(newOp);
-      } else ingredientOperationsToApply.push(newOp);
+      if (newOperation.store == "recipes") {
+      recipeOperationsToApply.push(newOperation);
+      } else ingredientOperationsToApply.push(newOperation);
     }
     [...]

@@ -22,8 +22,10 @@
 \usepackage{enumitem}
 \usepackage{chngcntr}
 \usepackage{jslistings}
+\usepackage{helvet}
 
 \AtBeginDocument{\counterwithout{lstlisting}{chapter}}
+\AtBeginDocument{\counterwithout{footnote}{chapter}}
 
 
 \lstset{basicstyle=\normalsize\linespread{1}\ttfamily\small,
@@ -42,7 +44,7 @@
 
 \usepackage[
 backend=biber,
-sorting=none,
+sorting=nty,
 style=apa,
 natbib=true
 ]{biblatex}
@@ -50,10 +52,10 @@ natbib=true
 \usepackage{enumitem}
 
 \defbibfilter{literatur}{%
-	\type{book} \or \type{article} \or \type{inproceedings}
+	\type{book} \or \type{article} \or \type{inproceedings} \or \type{phdthesis}
 }
 \defbibfilter{other}{%
-	\not \( \type{book} \or \type{article} \or \type{inproceedings} \or \type{online}\)
+	\not \( \type{book} \or \type{article} \or \type{inproceedings} \or \type{phdthesis} \or \type{online}\)
 }
 
 \setlist[enumerate]{label*=\arabic*.}
@@ -116,10 +118,10 @@ natbib=true
 \end{titlepage}
 \newpage
 \section*{Zusammenfassung}
-Die Arbeit \enquote{\inserttitle} behandelt die Konzeption und Umsetzung einer Offline-First Webanwendung mit einer Datenstruktur auf Basis von konfliktfreien Replizierten Datentypen(CRDTs). Zuerst werden die Grundlagen vom Offline-First Prinzip und CRDTs erkundet. Dabei soll dem Leser vermittelt werden, wie und warum der Einsatz von CRDTs in Offline-First Applikationen hilfreich sein kann, denn die Themen stehen nicht zwangsläufig in Verbindung. Anschließend wird eine Webanwendung, welche auch offline vollständig nutzbar ist, als Prototyp konzipiert und umgesetzt. Die Datenstruktur wird mithilfe von CRDTs so umgesetzt, dass ein konfliktfreies Synchronisieren von Daten mit einem Server möglich ist, auch wenn Änderungen offline erfolgt sind. Nach der Fertigstellung des Prototypen folgt eine Evaluation der entwickelten Anwendung und ihrer Funktionalitäten. Abgeschlossen wird die Arbeit mit dem Fazit, in welchem zusammengefasst wird welche Erkenntnisse über den Einsatz von CRDTs in Offline-First Anwendungen gewonnen werden konnten.
+Die Arbeit \enquote{\inserttitle} behandelt die Konzeption und Umsetzung einer Offline-First Webanwendung mit einer Datenstruktur auf Basis von konfliktfreien replizierten Datentypen (CRDTs). Zuerst werden die Grundlagen vom Offline-First Prinzip und CRDTs erkundet. Dabei wird untersucht, wie und warum der Einsatz von CRDTs in Offline-First Applikationen hilfreich sein kann, denn die Themen stehen nicht zwangsläufig in Verbindung. Anschließend wird eine Webanwendung, welche auch offline vollständig nutzbar ist, als Prototyp konzipiert und umgesetzt. Die Datenstruktur wird mithilfe von CRDTs so implementiert, dass ein konfliktfreies Synchronisieren von Daten mit einem Server möglich ist, auch wenn Änderungen offline erfolgt sind. Nach der Fertigstellung des Prototypen folgt eine Evaluation der entwickelten Anwendung und ihrer Funktionalitäten. Abgeschlossen wird die Arbeit mit dem Fazit, in welchem zusammengefasst wird, welche Erkenntnisse über den Einsatz von CRDTs in Offline-First Anwendungen gewonnen werden konnten.
 
 \section*{Abstract}
-The bachelors thesis \enquote{Data Synchronization In A Offline-First Web Application Using CRDTs} discusses the design and implementation of an offline-first web application with a data structure based on conflict-free replicated data types(CRDTs). First, the basics of the offline-first principle and CRDTs are explored. Because the topics are not necessarily related, the reader is given an explanation how and why the use of CRDTs in offline-first applications can be helpful. Subsequently, a web application, which is fully usable offline, is designed and implemented as a prototype. With the help of CRDTs, the data structure is implemented to allow conflict-free synchronization of it's data with a server, even if changes have been made offline. After completion of the prototype an evaluation of the developed application and its functionalities is conducted. The thesis is concluded with a summary of the gained knowledge on the use of CRDTs in offline First applications.
+The bachelor's thesis \enquote{Data Synchronization In an Offline-First Web Application Using CRDTs} discusses the design and implementation of an offline-first web application with a data structure based on conflict-free replicated data types(CRDTs). First, the basics of the Offline-First principle and CRDTs are explored. Because the topics are not necessarily related, it is investigated how and why the use of CRDTs in offline-first applications can be helpful. Subsequently, a web application, which is fully usable offline, is designed and implemented as a prototype. With the help of CRDTs, the data structure is implemented to allow conflict-free synchronization of it's data with a server, even if changes have been made offline. After completion of the prototype an evaluation of the developed application and its functionalities is conducted. The thesis is concluded with a summary of the knowledge gained on the use of CRDTs in Offline-First applications.
 \newpage
 
 \pagestyle{fancy}
@@ -157,26 +159,26 @@ The bachelors thesis \enquote{Data Synchronization In A Offline-First Web Applic
 
 Ob auf Reisen, im Supermarkt oder im Fahrstuhl -- Situationen, in denen mobile Endgeräte keine stabile Internetverbindung haben, kommen im Alltag häufiger vor als gewünscht. In vielen Entwicklungsländern und auch in ländlichen Gegenden entwickelter Industriestaaten fehlt dafür gar die komplette Infrastruktur. Im Laufe der letzten Jahre eröffneten Innovationen im Bereich der Browser-Technologien, allen voran der Service-Worker, neue Möglichkeiten für die Webentwicklung, insbesondere für sogenannte Offline-First Anwendungen. Als Offline-First Applikationen werden Webanwendungen bezeichnet, die ihre Funktionalität so weit es geht behalten, wenn die Verbindung zum Internet getrennt ist.
 
-Eine der Kernherausforderungen der Entwicklung von Offline-First Applikationen ist die Synchronisation von Daten. Werden offline Änderungen vorgenommen, sollen diese nicht verloren gehen. Hat sich der Zustand der Applikation, beispielsweise durch Modifikationen anderer Nutzer/innen, in der Zwischenzeit jedoch geändert, müssen beide Änderungen zusammengebracht, also synchronisiert werden. Der Prozess der Synchronisation ist oft aufwendig, denn zum Einen muss ermittelt werden, wo sich beide Replikationen unterscheiden und zum Anderen muss vermieden werden, dass die Änderungen sich in die Quere kommen. 
+Eine der Kernherausforderungen der Entwicklung von Offline-First Applikationen ist die Synchronisation von Daten. Werden offline Änderungen vorgenommen, sollen diese nicht verloren gehen. Hat sich der Zustand der Applikation, beispielsweise durch Modifikationen anderer Nutzer/innen, in der Zwischenzeit jedoch geändert, müssen die Änderungen zusammengebracht, also synchronisiert werden. Der Prozess der Synchronisation ist oft aufwendig, denn zum Einen muss ermittelt werden, wo sich die Replikationen unterscheiden und zum Anderen muss vermieden werden, dass die Änderungen sich in die Quere kommen. 
 
-Gängige Lösungen zu einer solchen Zusammenführung von Daten umfassen die Nutzung bestimmter Datenbanken-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CloudDB oder auch \ac{BaaS} Produkte wie Firebase oder IBM Cloudant, welche ebenfalls eine solche Funktionalität anbieten. Um zu vermeiden, die Applikation mit suboptimalen Datenbanken-Technologien umsetzen zu müssen, verzichten viele Applikationen bei Konflikten auf eine Synchronisation und eine/r der beiden Nutzer/innen verliert die vollbrachte Arbeit.
+Gängige Lösungen zu einer solchen Zusammenführung von Daten umfassen die Nutzung bestimmter Datenbank-Technologien. Dazu gehören Datenbanken mit implementierter Synchronisation wie CouchDB\footnote{https://docs.couchdb.org/en/stable/} oder auch \ac{BaaS} Produkte wie Google Firebase\footnote{https://firebase.google.com/docs} oder IBM Cloudant\footnote{https://cloud.ibm.com/apidocs/cloudant}, welche ebenfalls eine solche Funktionalität anbieten. Um zu vermeiden, die Applikation mit suboptimalen Datenbank-Technologien umsetzen zu müssen, verzichten viele Applikationen bei Konflikten auf eine Synchronisation und eine/r der beiden Nutzer/innen verliert die vollbrachte Arbeit.
 
 \section{Ziel der Arbeit} 
-\label{zieleDerArbeit}
-Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe \acp{CRDT} umzusetzen. Der Einsatz von \acp{CRDT} ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf \acp{CRDT} aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
+\label{sec:zieleDerArbeit}
+Ziel dieser Arbeit ist es, eine Lösung zur Synchronisation von Daten in Offline-First Anwendungen mit Hilfe von \acp{CRDT} umzusetzen. Der Einsatz von \acp{CRDT} ermöglicht, dass Daten in einem verteilten System in beliebiger Reihenfolge ausgetauscht werden können und dennoch zum gleichen Zustand aller Replikationen führen. Durch die Implementierung einer Datenstruktur, welche auf \acp{CRDT} aufbaut, kann der Prozess der Synchronisierung somit vermieden werden. Diese Lösung soll unabhängig von der gewählten Datenbank sein.
 
 So ergeben sich folgende Forschungsfragen:
 
 \begin{itemize}
 	\item Wie können \acp{CRDT} in Offline-First Applikationen verwendet werden?
-	\item Welche \acp{CRDT} bieten sich zur Umsetzung von Offline-First Applikationen an und wie werden diese in die Datenbanken (Client und Server) implementiert?
+	\item Welche \acp{CRDT} bieten sich zur Umsetzung von Offline-First Applikationen an, und wie werden diese in die Datenbanken (Client und Server) implementiert?
 	\item Welche Vor- und Nachteile bietet die Nutzung von \acp{CRDT} im Vergleich zu anderen Optionen zur Synchronisierung von Daten in Offline-First Applikationen?
 \end{itemize}
 
 \section{Vorgehen}
-Es gibt verschiedene Möglichkeiten, wie \acp{CRDT} in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur im hier entwickelten Prototypen beginnen kann, muss ermittelt werden, welche \acp{CRDT} sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden, eignet sich die Recherche in den in Abschnitt \ref{sec:VerwandteArbeiten} aufgeführten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch in Erfahrung zu bringen, welche \acp{CRDT} bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren in \ac{P2P} Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind \acp{CRDT} schon weiter verbreitet als in anderen Anwendungsgebieten.
+Es gibt verschiedene Möglichkeiten, wie \acp{CRDT} in Webapplikationen eingesetzt werden können. Bevor die Implementation der Datenstruktur im hier entwickelten Prototypen beginnen kann, muss ermittelt werden, welche \acp{CRDT} sich am besten für die Daten des Prototypen eignen. Um dies herauszufinden, eignet sich die Recherche in den in Abschnitt \ref{sec:VerwandteArbeiten} aufgeführten Publikationen. Darüber hinaus lohnt es sich an dieser Stelle auch, in Erfahrung zu bringen, welche \acp{CRDT} bis heute in fertigen Applikationen verwendet wurden. Auch Literatur zum Austausch von Daten in Applikationen zu kollaborativem Editieren in \ac{P2P} Netzwerken bietet sich zur Recherche an, denn in diesen Bereichen sind \acp{CRDT} schon weiter verbreitet als in anderen Anwendungsgebieten.
 
-Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte auch der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, auf welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
+Damit der Prototyp als praxisnahes Beispiel dienen kann, sollte ebenso der Stand der Technik im Themenbereich der Offline-First Anwendungen ermittelt werden. Um einzuordnen, auf welcher Ebene der Architektur der Applikation sich die umzusetzende Funktionalität zur Zusammenführung der Daten am besten einbauen lässt, lohnt sich auch ein Blick auf bestehende Lösungen, welche die Synchronisation nicht direkt auf der Datenbankebene durchführen, sondern zwischen Applikation und Datenbank.
 
 \chapter{Grundlagen}
 Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte, auf welchen Offline-First Applikationen und \acp{CRDT} aufbauen. 
@@ -186,11 +188,11 @@ Dieses Kapitel erläutert die Grundlagen, Ideen und Konzepte, auf welchen Offlin
 
 \acp{CRDT} sind aus der Forschung an Datenstrukturen für kollaboratives Editieren entstanden. \citet{InproceedingsCRDTOriginal} formulieren die theoretischen Grundlagen von \acp{CRDT}, um \ac{SEC} in großen verteilten Systemen zu garantieren. \ac{SEC} erweitert den bis dahin verbreiteten Ansatz der \ac{EC}. Während EC nur garantiert, dass sämtliche Updates schlussendlich alle Replizierungen der Datenbank erreichen, garantiert SEC zusätzlich, dass Updates unabhängig von Reihenfolge und Zeitpunkt immer zum gleichen Zustand der Replizierungen führen.
 
-Seitdem hat sich die Verwendung von \acp{CRDT} in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke. Eine weitere Bibliothek, die vorgefertigte \acp{CRDT} bereitstellt ist yjs \autocite{inproceedingsYjs}. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{\acp{CRDT} for Mortals} \autocite{OnlineCrdtsForMortals}, in welchem über den Einsatz von \acp{CRDT} im Client-Server Modell gesprochen wird.  
+Seitdem hat sich die Verwendung von \acp{CRDT} in verschiedenen Bereichen der Webentwicklung verbreitet. \citet{ArticleCRDTJSON} entwerfen eine Bibliothek CRDT konformer \ac{JSON} Datenstrukturen, genannt \enquote{automerge}, die beliebig verschachtelte Listen und Maps unterstützt. Mit \enquote{Hypermerge} entstand auch eine spezielle Version für Peer-to-Peer Netzwerke. Eine weitere Bibliothek, die vorgefertigte \acp{CRDT} bereitstellt, ist yjs \autocite{inproceedingsYjs}. Einen wichtigen Anhaltspunkt für die Nutzung in Offline-First Applikationen bietet der Vortrag \enquote{\acp{CRDT} for Mortals} \autocite{OnlineCrdtsForMortals}, in welchem über den Einsatz von \acp{CRDT} im Client-Server Modell gesprochen wird.  
 
 Mit Woot \autocite{InproceedingsCRDTWoot}, Logoot \autocite{InproceedingsCRDTLogoot} und LSEQ \autocite{InproceedingsCRDTLSEQ} sind bereits \acp{CRDT} speziell für den Bereich des kollaborativen Editierens entwickelt worden. 
 
-Der Anzahl an Quellen und Ressourcen rund um \acp{CRDT} mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von \acp{CRDT} für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die \acp{CRDT} konzipiert sind, sind dem Autoren keine wissenschaftlichen Arbeiten über den konkreten Einsatz von \acp{CRDT} in Offline-First Webanwendungen bekannt. Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von \acp{CRDT} in einer Offline-First Webanwendung umzusetzen und zu ermitteln, wie dies bei der Bewältigung der Herausforderungen dieser Umgebung, helfen kann.
+Der Anzahl an Quellen und Ressourcen rund um \acp{CRDT} mangelt es weder an theoretischen noch an praktischen Beispielen. Während einige Arbeiten die Nutzung von \acp{CRDT} für Offlinefunktionalität empfehlen und die Umgebung von Offline-First Applikationen sehr den verteilten Netzwerken ähnelt, für die \acp{CRDT} konzipiert sind, sind dem Autoren keine wissenschaftlichen Arbeiten über den konkreten Einsatz von \acp{CRDT} in Offline-First Webanwendungen bekannt. Ziel dieser Arbeit ist es deshalb, die umfangreich erforschten Grundlagen zum Einsatz von \acp{CRDT} in einer Offline-First Webanwendung umzusetzen und zu ermitteln, wie dies bei der Bewältigung der Herausforderungen dieser Umgebung helfen kann.
 
 \section{Definition: Offline-First}\label{sec:DefinitionOfflineFirst}
 Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den Fall der unterbrochenen Internetverbindung nicht als Ausnahme, sondern als Standard ansieht \autocite{OnlineGoogleProgressiveWebApps}. Teilweise wird der Begriff auch anders interpretiert, im Rahmen dieser Arbeit sei Offline-First jedoch unter folgenden Kriterien zu verstehen: Die Applikation geht davon aus, dass die Verbindung mit dem Internet nach dem ersten Laden der Seite stets unterbrochen werden kann. Dies gilt auch im Falle von Verbindungsproblemen, welche nicht vom Endgerät des Nutzers als solche erkannt werden, z.B. wenn das Endgerät mit dem Internet verbunden ist, aber die Route zur Website an anderer Stelle unterbrochen ist. Sämtliche Use-Cases werden so geplant, dass Nutzer/innen auch offline so viele Funktionalitäten wie möglich zur Verfügung stehen \autocite{ArticleDesigningOfflineFirst}. 
@@ -202,7 +204,7 @@ Als Offline-First wird ein Vorgehen bezeichnet, bei welchem eine Applikation den
 
 Ein Service Worker ist ein sogenannter Web Worker. Web Worker sind Skripte, die unabhängig von anderen Skripts, welche auf Interaktionen mit der Benutzeroberfläche reagieren, im Hintergrund der Webanwendung laufen \autocite{OnlineHTTPWorker}.
 
-In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über Netzwerk-Requests an den Server angefordert. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit diese Tatsache kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler/innen können gezielt entscheiden, welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler/innen sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann \autocite{OnlineServiceWorkersAnIntroduction}. Dies ist eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
+In traditionellen Webanwendungen werden alle benötigten Dateien, Markups, Skripte und Assets über Netzwerk-Requests an den Server angefordert. Der Service Worker ist ein event-basiertes Skript, welches als Proxy zwischen Client und Server agiert. Damit dies kein Sicherheitsrisiko darstellt, funktionieren Service Worker nur, wenn die Applikation \ac{HTTPS} nutzt. Requests, welche üblicherweise direkt an den Server gehen würden, werden erst vom Service Worker verarbeitet. Entwickler/innen können gezielt entscheiden, welche Netzwerk-Requests auf welche Art und Weise verarbeitet werden sollen. Mithilfe dieser Funktionalität können Entwickler/innen sogenannte Caching-Strategien für den Service Worker implementieren, womit das Verbindungsverhalten der Applikation festgelegt werden kann \autocite{OnlineServiceWorkersAnIntroduction}. Dies ist eine für Offline-First Applikationen essenzielle Funktionalität, denn so kann garantiert werden, dass die Applikation auch ohne Internetverbindung funktionsfähig ist. 
 
 \section{Caching}
 In dieser Sektion werden einige grundlegende Caching-Strategien beschrieben, mit Beispielen, für welche Art von Netzwerk-Requests sie sich eignen könnten.
@@ -221,7 +223,7 @@ Abbildung \ref{fig:cachingNetworkFirst} beschreibt einen Request, den der Servic
 
 \subsubsection{\enquote{Erst Cache, dann Netzwerk}}
 \label{sec:cachedannnetzwerk}
-Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage als \ac{HTTP}-Request an den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Netzwerk-Requests in Offline-First Anwendungen \autocite[Kapitel 05]{BookBuildingPWAs}.
+Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an den Cache weitergeleitet. Befindet sich die angefragte Datei nicht im Cache, wird die Anfrage an den Server weitergeleitet. Dies ist die bevorzugte Strategie für die meisten Netzwerk-Requests in Offline-First Anwendungen \autocite[Kapitel 05]{BookBuildingPWAs}.
 
 \begin{figure}[H]
 	\centering
@@ -231,7 +233,7 @@ Wie Abbildung \ref{fig:cachingCacheFirst} zeigt, wird der Request hier zuerst an
 \end{figure}
 
 \subsubsection{\enquote{Nur Netzwerk}}
-Für Aufgaben, die nur online zu erfüllen sind, eignet sich die in Abbildung \ref{fig:cachingNetworkOnly} bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so konzipiert sein, dass diese Art Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, wenn der Client wieder online ist.
+Für Aufgaben, die nur online zu erfüllen sind, eignet sich die in Abbildung \ref{fig:cachingNetworkOnly} bezeichnete Strategie. Hier leitet der Service Worker den Request nur an das Netzwerk und nie an den Cache weiter. Offline-First Applikationen sollten so konzipiert sein, dass diese Art von Requests im Falle einer unterbrochenen Internetverbindung nachgeholt werden können, sobald der Client wieder online ist.
 
 \begin{figure}[H]
 	\centering
@@ -250,8 +252,8 @@ Abbildung \ref{fig:cachingCacheOnly} zeigt, wie die angefragte Ressource nur im 
 	\label{fig:cachingCacheOnly}
 \end{figure}
 
-\section{Offline First Applikationen als verteilte Systeme}\label{sec:OfflineFirstVerteiteSysteme}
-\citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die den Benutzer/innen als ein einziges kohärentes System erscheint.}
+\section{Offline-First Applikationen als verteilte Systeme}\label{sec:OfflineFirstVerteiteSysteme}
+\citet{ArticleDistributedSystems} beschreiben verteilte Systeme wie folgt: \enquote{Ein verteiltes System ist eine Sammlung von autonomen Rechenelementen, die dem Nutzer als ein einziges kohärentes System erscheint.}
 
 Die folgende Auflistung zeigt die Charakteristika von verteilten Systemen, zusammengefasst nach \citet[S. 2-3]{BookDistributedSystemsDefinition}.
 
@@ -259,7 +261,7 @@ Die folgende Auflistung zeigt die Charakteristika von verteilten Systemen, zusam
 \item[Eigenständige Computer] In einem verteilten System sind mehrere eigenständige Computer zu einem System verbunden. Diese können sich sowohl in der Hardware als auch in der Funktionsweise unterscheiden. 
 \item[Singuläres Erscheinungsbild] Für Nutzer/innen sind die Unterschiede zwischen den einzelnen Computern im System unersichtlich. Sie nehmen die verteilten Computer als ein einzelnes System wahr. 
 \item[Konsistente und einheitliche Interaktion]
-	Eine Konsequenz aus dem singulären Erscheinen ist, dass die Interaktion der Nutzer/innen mit dem System immer gleich sein sollte, unabhängig davon, mit welcher Schnittstelle des Systems sie tatsächlich interagieren. 
+	Eine Konsequenz aus dem singulären Erscheinen ist, dass die Interaktion der Nutzer/innen mit dem System immer gleich sein sollte, unabhängig davon, mit welchem Computer des Systems sie tatsächlich interagieren. 
 \item[Kontinuierliche Verfügbarkeit]
 	Das System soll den Nutzer/innen kontinuierlich zur Verfügung stehen, auch wenn einzelne Teile des Systems vorübergehend ausgefallen oder nicht erreichbar sind.
 \end{description}
@@ -270,7 +272,7 @@ Die folgende Liste zeigt, dass funktionsfähige Offline-First Applikationen die 
 
 \begin{description}		
 \item[Eigenständige Computer] Der Server und verschiedene Endgeräte bilden ein System. Sobald ein Endgerät die Applikation zwischenspeichert, ist sie als eigenständiger Computer im System aktiv. Als Endgerät qualifiziert sich jedes Gerät, welches einen kompatiblen Browser betreibt, weshalb die Endgeräte auch untereinander über unterschiedlichste Hardware verfügen können.
-\item[Singuläres Erscheinungsbild]Die Grundidee hinter Offline-First Applikationen ist das Gewährleisten von möglichst umfangreicher Offlinefunktionalität \autocite{OnlineGoogleOfflineFirst}. Offline interagierten Nutzer/innen nur mit ihren Endgeräten, online werden die Daten gleich an den Server geschickt. Diese Unterschiede sind für die Nutzer/innen jedoch nicht von Belang. \item[Konsistente und einheitliche Interaktion]
+\item[Singuläres Erscheinungsbild]Die Grundidee hinter Offline-First Applikationen ist das Gewährleisten von möglichst umfangreicher Offlinefunktionalität \autocite{OnlineGoogleOfflineFirst}. Offline interagieren Nutzer/innen nur mit ihren Endgeräten, online werden die Daten auch an den Server geschickt. Diese Unterschiede sind für die Nutzer/innen jedoch nicht von Belang, da die Applikation auch offline funktioniert. \item[Konsistente und einheitliche Interaktion]
 Unabhängig davon, welche Endgeräte Nutzer/innen verwenden, sollen ihnen früher oder später die Änderungen aller im System aktiven Geräte angezeigt werden. Nutzerinnen und Nutzer müssen sich zu keinem Zeitpunkt Gedanken darüber machen, aus welchen Computern das System besteht.
 \item[Kontinuierliche Verfügbarkeit]
 Ein weiterer Aspekt, welcher sich aus der verbindlichen Offlinefunktionalität ergibt, ist die kontinuierliche Verfügbarkeit. Nutzer/innen können ihre Arbeit auch fortführen, wenn der Server nicht erreichbar ist. Durch SEC landen diese Änderungen früher oder später im System, wodurch die getrennte Verbindung zum Server keine Auswirkungen auf dessen Funktionsumfang hat. 
@@ -281,7 +283,7 @@ Daraus ergibt sich, dass es sich bei Offline-First Webanwendungen um verteilte S
 
 \section{Replikation}
 
-Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten. Datenreplikation beschreibt das Verwalten mehrerer Datenspeicher, genannt Replikationen. Diese Replikationen halten die gleichen Daten, befinden sich jedoch auf unterschiedlichen Computern \autocite[S. 42]{ArticleOptimisticReplication}. \citet{BookDistributedSystemsConceptsAndDesign} nennen drei Aspekte, zu denen Replikation in verteilten Systemen entscheidend beiträgt: Performancesteigerung, erhöhte Verfügbarkeit und Fehlertoleranz. Somit trägt diese Technik entscheidend dazu bei, sowohl kontinuierliche Verfügbarkeit als auch konsistente Interaktion, beschrieben in \ref{tab:charakteristikaDistributedSystem}, zu garantieren. Vom aus dem Netz nicht mehr wegzudenkenden Caching bis hin zu aufwendigeren Aufgaben wie Load-Balancing oder der Verarbeitung von DNS-Requests bietet das Internet zahlreiche Anwendungsfelder, in denen Replikation angewendet wird. 
+Eine der wichtigsten Grundlagen verteilter Systeme ist die Replikation von Daten. Datenreplikation beschreibt das Verwalten mehrerer Datenspeicher, genannt Replikationen. Diese Replikationen halten die gleichen Daten, befinden sich jedoch auf unterschiedlichen Computern \autocite[S. 42]{ArticleOptimisticReplication}. \citet{BookDistributedSystemsConceptsAndDesign} nennen drei Aspekte, zu denen Replikation in verteilten Systemen entscheidend beiträgt: Performancesteigerung, erhöhte Verfügbarkeit und Fehlertoleranz. Somit trägt diese Technik entscheidend dazu bei, sowohl kontinuierliche Verfügbarkeit als auch konsistente Interaktion, beschrieben in \ref{tab:charakteristikaDistributedSystem}, zu garantieren. Vom aus dem Netz nicht mehr wegzudenkenden Caching bis hin zu aufwendigeren Aufgaben wie Load-Balancing oder der Verarbeitung von DNS-Requests bietet das Internet zahlreiche Anwendungsfelder für Replikationen. 
 
 \subsection{Pessimistische Replikation: Strong Consistency}
 
@@ -296,7 +298,7 @@ Die optimistische Replikation, auch genannt \acf{EC}, ist ein alternatives Model
 
 Die Implementierung von optimistischer Replikation bietet sich somit als Lösung für Systeme an, welche besonderen Wert auf kontinuierliche Verfügbarkeit legen, wie Offline-First Applikationen (vgl. Sektion \ref{sec:OfflineFirstVerteiteSysteme}). 
 
-Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind, oder keine Verbindung zum Netzwerk haben. Nehmen Nutzer/innen Änderungen vor, so werden diese auf der jeweiligen Replikation sofort umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben sowie selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S. 46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
+Bei der Verwendung von optimistischer Replikation sind Änderungen an Replikationen jederzeit gestattet, auch wenn diese nicht auf dem aktuellsten Stand sind oder keine Verbindung zum Netzwerk haben. Nehmen Nutzer/innen Änderungen vor, so werden diese auf der jeweiligen Replikation sofort umgesetzt. Im Hintergrund wartet die Applikation nun darauf, diese Änderung an die restlichen Computer des verteilten Systems weiterzugeben sowie selbst Änderungen entgegenzunehmen und zu verarbeiten \autocite[S. 46]{ArticleOptimisticReplication}. Ziel ist es, wie beim Modell der Strong Consistency, Einheitlichkeit unter den Replikationen herzustellen. Das Modell der \ac{EC} setzt jedoch nicht voraus, dass diese Einheitlichkeit sofort erfolgen muss, sondern nur zu einem beliebigen späteren Zeitpunkt. 
 
 Da die Computer im System parallel Änderungen vornehmen können, kann es vorkommen, dass mehrere Replikationen das gleiche Datenobjekt modifizieren. Im Allgemeinen werden die Modifikationen zu unterschiedlichen Ergebnissen führen. Ist dies der Fall, spricht man von einem Konflikt. Das Ziel, Konvergenz zwischen den Replikationen zu erlangen, kann nur erreicht werden, wenn aus allen im Konflikt stehenden Änderungen eine einheitliche Lösung entsteht.
 
@@ -338,17 +340,17 @@ Die Datentypen werden speziell so modelliert, dass das Aktualisieren von \acp{CR
 
 Diese Eigenschaften führen dazu, dass sich zwei Replikationen deterministisch im gleichen Zustand befinden müssen, sobald sie den Stand ihrer Daten synchronisiert haben. Im Gegensatz zur \ac{EC} ist das System nicht mehr von einer im Konsens zu geschehenden Konfliktlösung abhängig. 
 
-Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von \acp{CRDT} in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele, gut dokumentierte, kompatible Datentypen (vgl. Sektion \ref{sec:VerwandteArbeiten}), dennoch bedarf die Verwendung von \acp{CRDT} und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich.
+Dieser Vorteil von \ac{SEC} ist gleichzeitig der größte Nachteil bei der Nutzung von \acp{CRDT} in der Praxis. Nicht alle Datenstrukturen lassen sich so modellieren, dass sie die benötigten oben genannten Anforderungen erfüllen. Zwar gibt es bereits viele gut dokumentierte, kompatible Datentypen (vgl. Sektion \ref{sec:VerwandteArbeiten}), dennoch bedarf die Verwendung von \acp{CRDT} und \ac{SEC} ausgiebiger Planung und ist in manchen Fällen schlichtweg nicht möglich.
 
 In der Literatur werden \acp{CRDT} in state-based und operation-based unterteilt \autocite[S. 10]{ArticleOptimisticReplication}. Die Unterscheidung erfolgt danach, wie das Zusammenführen der Objekte funktioniert.
 
 \begin{description}
 \label{sec:stateopbased}
 	\item[State-based]
-	Beim Synchronisieren von state-based \acp{CRDT} wird der gesamte Zustand der Objekte ausgetauscht. Die Implementierung eines state-based CRDT muss über eine \enquote{Merge} Methode verfügen, damit der Zustand zweier \acp{CRDT} zu einem kombiniert werden kann, um so Konvergenz zu erreichen. Der Zustand eines state-based \acp{CRDT} wird durch einen Halbverband\footnote{\enquote{Ein Halbverband ist eine kommutative Halbgruppe (d.h. eine Menge H mit einer assoziativen und kommutativen binären Verknüpfung $\sqcap$), in der jedes Element idempotent ist [..]} \autocite{MiscHalbverband}} gebildet, dessen obere Schranke den aktuellen Wert des \acp{CRDT} darstellt. \autocite{InproceedingsStateBased}
+	Beim Synchronisieren von state-based \acp{CRDT} wird der gesamte Zustand der Objekte ausgetauscht. Die Implementierung eines state-based CRDTs muss über eine \textit{Merge} Methode verfügen, damit der Zustand zweier \acp{CRDT} zu einem kombiniert werden kann, um so Konvergenz zu erreichen. Der Zustand eines state-based \acp{CRDT} wird durch einen Halbverband\footnote{\enquote{Ein Halbverband ist eine kommutative Halbgruppe (d.h. eine Menge H mit einer assoziativen und kommutativen binären Verknüpfung $\sqcap$), in der jedes Element idempotent ist [..]} \autocite{MiscHalbverband}} gebildet, dessen obere Schranke den aktuellen Wert des \acp{CRDT} darstellt. \autocite{InproceedingsStateBased}
 	
 	\item[Operation-based]
-	Bei der Variante der operation-based \acp{CRDT} wird nicht der gesamte Zustand der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der Zustand eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Ändert sich beispielsweise der Wert eines Counters von 5 zu 10, so würde die Operation nicht den neuen Wert enthalten, sondern die durchgeführte Addition, also \enquote{+ 5}. Jede so erzeugte Operation muss an alle anderen Replikationen des Systems verteilt werden. Wenn eine Replikation eine solche Operation empfängt, wird die gleiche Änderung, welche schon im Ursprung angewendet wurde, auch hier angewandt. Da die Operationen kommutativ sein müssen, ist die Reihenfolge der Updates nicht relevant. Die Implementierung eines operation-based \acp{CRDT} muss garantieren, dass alle Replikationen diese Updates zuverlässig erhalten und anwenden \autocite[S.18-19]{ArticleCRDTOverview}. Im Gegensatz zu der Merge Methode des State-based \acp{CRDT} muss ein operation-based CRDT also über zwei Methoden verfügen: Eine zum Generieren von Operationen und eine weitere zum Anwenden von Operationen.
+	Bei der Variante der operation-based \acp{CRDT} wird nicht der gesamte Zustand der Objekte ausgetauscht. Stattdessen erfolgt der Austausch über einzelne Updates. Wird der Zustand eines Objektes geändert, so wird die Operation, welche die Änderung hervorgerufen hat, gespeichert. Ändert sich beispielsweise der Wert eines Counters von 5 zu 10, so würde die Operation nicht den neuen Wert enthalten, sondern die durchgeführte Addition, also \enquote{+ 5}. Jede so erzeugte Operation muss an alle anderen Replikationen des Systems verteilt werden. Wenn eine Replikation eine solche Operation empfängt, wird die gleiche Änderung, welche schon im Ursprung angewendet wurde, auch hier angewandt. Da die Operationen kommutativ sein müssen, ist die Reihenfolge der Updates nicht relevant. Die Implementierung eines operation-based \acp{CRDT} muss garantieren, dass alle Replikationen diese Updates zuverlässig erhalten und anwenden \autocite[S.18-19]{ArticleCRDTOverview}. Im Gegensatz zu der \textit{Merge} Methode des State-based \acp{CRDT} muss ein operation-based CRDT also über zwei Methoden verfügen: Eine zum Generieren von Operationen und eine weitere zum Anwenden von Operationen.
 \end{description} 
 
 Beide Kategorien sind äquivalent \autocite[S. 9]{InproceedingsCRDTOriginal}, was bedeutet, dass ein state-based CRDT ein operation-based CRDT emulieren kann und umgekehrt.
@@ -358,12 +360,12 @@ Beide Kategorien sind äquivalent \autocite[S. 9]{InproceedingsCRDTOriginal}, wa
 \subsection{Last-Write-Wins Register}
 \label{sec:lwwRegister}
 \sloppypar
-Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neuste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
+Ein Register ist ein Objekt, welches einen einzelnen Wert verwaltet. Dieser Wert kann jede vom System unterstützte Datenstruktur sein. Ein \ac{LWW-Register} verfügt neben dem Wert noch über einen Zeitstempel. Wird der Wert des Registers geändert, wird auch der Zeitstempel auf den Zeitpunkt dieser Änderung gesetzt. Beim Zusammenführen zweier Register kann so immer die neueste Änderung übernommen werden. Da sowohl Wert als auch Zeitstempel ausgetauscht werden, handelt es sich hier um ein state-based CRDT.
 
 \subsection{Last-Write-Wins Map}
 \label{sec:lwwMap}
 \sloppypar
-Während ein \ac{LWW-Register} ein einzelnes Schlüssel-Wert Paar darstellt, besteht eine LWW-Map aus einem bis beliebig vielen LWW-Registern \autocite[43]{PhdthesisLwwMap}.
+Während ein \ac{LWW-Register} ein einzelnes Schlüssel-Wert-Paar darstellt, besteht eine LWW-Map aus einem bis beliebig vielen LWW-Registern. \autocite[43]{PhdthesisLwwMap}.
 
 
 %TODO Counter auslassen weil ich ihn nicht benutze?
@@ -376,12 +378,12 @@ Ein \ac{G-Set} löst dieses Problem, indem keine Objekte aus dem Set entfernt we
 %todo OPERATIONEN KURSIV? IRGENDWIE HERVORHEBEN
 
 \chapter{Konzeption}
-%EINLEITENDER ABSCHNITT
+In diesem Kapitel geht es um die Idee und Planung des im Rahmen der Arbeit entwickelten Prototypen. 
 
 \section{Idee des Prototypen}
 Ziel der Arbeit ist es, einen Prototypen zu entwickeln, welcher die Nutzung von \acp{CRDT} in Offline-First Webanwendungen demonstriert. Da die Datenstruktur hier im Mittelpunkt steht, liegt es nahe, als Prototyp eine Applikation zu entwickeln, in der Nutzer/innen auf verschiedenen Wegen mit Daten interagieren.
 
-Deshalb wird eine Applikation zum Verwalten von Rezepten entwickelt, welche es Nutzer/innen ermöglicht, ein gemeinsames Rezeptebuch zu pflegen. Da die Nutzer/innen in der Lage sein sollen, online, offline und zur gleichen Zeit Rezepte anlegen, speichern und bearbeiten zu können, ist dies ein geeignetes Szenario, um die Nutzung von \acp{CRDT} zu untersuchen. 
+Deshalb wird eine Applikation zum Verwalten von Kochrezepten entwickelt, welche es Nutzer/innen ermöglicht, ein gemeinsames Rezeptebuch zu pflegen. Da die Nutzer/innen in der Lage sein sollen, online, offline und zur gleichen Zeit Rezepte anlegen, speichern und bearbeiten zu können, ist dies ein geeignetes Szenario, um die Nutzung von \acp{CRDT} zu untersuchen. 
 
 \section{Anforderungsanalyse}
 \label{sec:anforderungsanalyse}
@@ -390,7 +392,7 @@ In diesem Abschnitt werden die funktionalen und nicht-funktionalen Anforderungen
 
 \subsection{Funktionale Anforderungen}
 \label{sec:funktionaleAnforderungen}
-Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität des zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darüber geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist (vgl. Abschnitt \ref{sec:zieleDerArbeit}), liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und \acp{CRDT}.
+Zweck der funktionalen Anforderungen ist es, Verhalten und Funktionalität des zu entwickelnden Systems zu beschreiben. Die formulierten Anforderungen sollen somit einen Überblick darüber geben, was das implementierte System erfüllen muss. Da das Ziel dieser Arbeit die Entwicklung einer Datenstruktur für eine Offline-First Applikation ist, liegt der Fokus der gesammelten Anforderungen eindeutig auf dem Zusammenspiel zwischen Offline-First und \acp{CRDT}.
 
 Üblich in einer Anforderungsanalyse ist, Anforderungen in die Kategorien notwendig (\enquote{muss}), wünschenswert (\enquote{soll}) und möglich (\enquote{kann}) einzuteilen. Da es sich hier um die Entwicklung eines Prototypen handelt, wird sich in diesem Teil exklusiv auf notwendige Anforderungen beschränkt. Hierbei handelt es sich um Anforderungen, welche essenziell für das System sind.
 
@@ -571,7 +573,7 @@ Somit wäre erneut das Kommutativgesetz verletzt und die Applikationsdaten könn
 	\label{fig:rezeptLöschenSchlecht}
 \end{figure}
 
-Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Abschnitt \ref{sec:g-set}) implementiert. Dies bedeutet, dass die Elemente des Sets, also die Rezepte und Zutaten, nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \textit{tombstone}. Beim \textit{tombstone}-Wert handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
+Im Prototyp werden die Rezepte- und Zutatensammlungen deshalb als G-Set (vgl. Abschnitt \ref{sec:g-set}) implementiert. Dies bedeutet, dass die Elemente des Sets, also die Rezepte und Zutaten, nicht mehr gelöscht werden können, nachdem sie einmal angelegt wurden. Stattdessen wird das Entfernen der Objekte über eine weitere Eigenschaft gelöst, den sogenannten \enquote{tombstone}. Beim \enquote{tombstone}-Wert handelt es sich um einen Statusindikator, welcher bestimmt, ob ein Objekt von der Applikation als aktiv oder inaktiv behandelt werden soll. Somit kann auch das Entfernen eines Objektes auf die gleiche Herangehensweise erfolgen wie das Anlegen und Bearbeiten.
 
 \begin{minipage}{\linewidth}
 	\lstinputlisting[language=JavaScript, caption={Beispiel Entfernen-Operation}, label={lst:operationv2}]{code/operationTombstone.js}
@@ -918,9 +920,8 @@ Auf dem Client findet das Löschen alter Operationen während des Filterns der O
 
 Um zu verhindern, dass überflüssige Operationen auf dem Server gespeichert bleiben, wird für jede eingehende Operation nach einer älteren lokalen Operation gesucht, die den gleichen Wert bearbeitet (vgl. Listing \ref{lst:deleteUselessOpServer}). Wird eine solche Operation gefunden, wird sie aus der Datenbank gelöscht. Anschließend wird noch überprüft, ob sich die gerade gelöschte Operation auch in den eingehenden Operationen befindet. Ist dies der Fall, wird sie auch dort gelöscht, damit sie nicht direkt wieder in die Datenbank geschrieben wird.
 
-\begin{minipage}{\linewidth}
-	\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Server}, label={lst:deleteUselessOpServer}]{code/deleteUselessOpServer.js}
-\end{minipage}
+\lstinputlisting[language = Javascript, caption={Löschen überflüssiger Operationen auf dem Server}, label={lst:deleteUselessOpServer}]{code/deleteUselessOpServer.js}
+
 
 \chapter{Evaluation}
 
@@ -973,23 +974,25 @@ Die Serverseitige Datenbank lediglich als zentraler Speicher von Operationen. Je
 
 Mit der Umsetzung des Prototypen wurde gezeigt, dass der Einsatz von CRDTs eine valide Lösung für die Synchronisierung von Applikationsdaten in Offline-First Anwendungen ist.
 
-Bei der Planung der Datenstruktur ist es wichtig, die Anforderungen, welche die Applikation erfüllen muss, und somit auch die geplante Interaktion mit den Applikationsdaten zu kennen. Im Fall des Prototypen wird das CRDT aus einer Sammlung von Grow-Only Sets, welche wiederum LWW-Maps beinhalten, gebildet. Diese CRDTs sind in Komplexität und Funktionsumfang relativ simpel, eignen sich jedoch sehr gut für die flache Datenstruktur des Prototypen. Mit 204 Zeilen JavaScript Code, was zu einer Dateigröße von 6,9kb in ausgeschriebener Fassung und 2,1kb in minimierter Version führt, ist die Implementierung des CRDT Prototypen sehr schlank. Herausforderungen zeigen sich bei der implementierten Datenstruktur noch in der Skalierbarkeit. In dieser Hinsicht bedenklich ist, dass die Elemente des G-Sets nicht gelöscht werden können und auch die Menge der Operationen, selbst mit regelmäßigem Löschen, kontinuierlich ansteigen dürfte. Auch bedarf der Prototyp einer Erweiterung um eine sichere Methode zum erzeugen von Timestamps, da die umgesetzte Nutzung von JavaScripts \textit{Date.now} nicht zuverlässig ist. Eine bekannte Lösung für dieses Problem wäre die Implementierung einer Hybrid-Logical-Clock (HLC).
+Bei der Planung der Datenstruktur ist es wichtig, die Anforderungen, welche die Applikation erfüllen muss und somit auch die geplante Interaktion mit den Applikationsdaten zu kennen. Im Fall des Prototypen wird das CRDT aus einer Sammlung von Grow-Only Sets, welche wiederum LWW-Maps beinhalten, gebildet. Diese CRDTs sind in Komplexität und Funktionsumfang relativ simpel, eignen sich jedoch sehr gut für die flache Datenstruktur des Prototypen. Mit 204 Zeilen JavaScript Code, was zu einer Dateigröße von 6,9\,kB in ausgeschriebener Fassung und 2,1\,kB in minimierter Version führt, ist die Implementierung des CRDT Prototypen sehr schlank.
 
-Eine generelle Empfehlung zur Nutzung bestimmter CRDTs in Offline-First Webanwendungen lässt sich jedoch nicht aussprechen. Dies ist aber eher eine positive Erkenntnis, als eine negative. Wenn im Prototypen beispielsweise beim Synchronisieren das Bearbeiten stets das Löschen von Rezepten und Zutate überschreiben sollte, hat man als Entwickler/in die Möglichkeit das Verhalten des CRDTs anzupassen. Statt LWW-Maps würde sich dann die Umsetzung von Update-Wins-Maps anbieten. Die große Anzahl bereits erforschten, entwickelten und umgesetzten CRDTs bietet Webentwickler/innen eine gute Grundlage, sich passende Bausteine für die eigene, maßgeschneiderte Datenstruktur zu sichern. Dabei sollte beachtet werden, dass die Umsetzung von CRDTs nicht für jeden Anwendungsfall geeignet ist. Für komplexe Funktionalitäten kann es schwierig sein, eine CRDT-Basierte Datenstruktur umzusetzen welche den Anforderungen entspricht, ohne die Regeln der \ac{SEC} zu verletzten. In solchen Fällen lohnt sich auch ein Blick auf Bibliotheken, welche eine Reihe vorgefertigter CRDTs beinhalten wie zum Beispiel automerge\footnote{https://github.com/automerge/automerge}, yjs\footnote{https://github.com/yjs/yjs} oder js-delta-crdts\footnote{https://github.com/peer-base/js-delta-crdts}. 
+Herausforderungen zeigen sich bei der implementierten Datenstruktur noch in der Skalierbarkeit. In dieser Hinsicht bedenklich ist, dass die Elemente des G-Sets nicht gelöscht werden können und auch die Menge der Operationen, selbst mit regelmäßigem Löschen, kontinuierlich ansteigen dürfte. Auch bedarf der Prototyp einer Erweiterung um eine sichere Methode zum Erzeugen von Timestamps, da die umgesetzte Nutzung von JavaScripts \textit{Date.now} nicht zuverlässig ist. Eine bekannte Lösung für dieses Problem wäre die Implementierung einer Hybrid-Logical-Clock (HLC).
 
-Ein weiterer Vorteil, den Entwickler/innen bei der die Umsetzung einer eigenen CRDT-basierten Datenstruktur haben, ist die Unabhängigkeit von Datenbanken-Technologien. Eine Implementierung, wie sie im Prototypen erfolgt ist, kann problemlos mit dem lokalen Speichern der IndexedDB-API und einer beliebigen Server-Datenbank erfolgen. Im Gegensatz zur Verwendung spezieller Datenbanken oder \ac{BaaS} Anbietern, welche Funktionen zum Synchronisieren von Daten bereitstellen, ist ein selbst implementiertes CRDT unabhängig von Funktionalitäten, die an bestimmte Datenbanken geknüpft sind.
+Eine generelle Empfehlung zur Nutzung bestimmter CRDTs in Offline-First Webanwendungen lässt sich jedoch nicht aussprechen. Dies ist aber eher eine positive Erkenntnis als eine negative. Wenn beispielsweise im Prototypen beim Synchronisieren das Bearbeiten stets das Löschen von Rezepten und Zutaten überschreiben soll, hat man als Entwickler/in die Möglichkeit, das Verhalten des CRDTs anzupassen. Statt LWW-Maps würde sich dann die Umsetzung von Update-Wins-Maps anbieten. Die große an Anzahl bereits erforschten, entwickelten und umgesetzten CRDTs bietet Webentwickler/innen eine gute Grundlage, passende Bausteine für die eigene maßgeschneiderte Datenstruktur auszuwählen. Dabei sollte beachtet werden, dass die Umsetzung von CRDTs nicht für jeden Anwendungsfall geeignet ist. Für komplexe Funktionalitäten kann es schwierig sein, eine CRDT-basierte Datenstruktur umzusetzen, welche den Anforderungen entspricht, ohne die Regeln der \ac{SEC} zu verletzten. In solchen Fällen lohnt sich auch ein Blick auf Bibliotheken, welche eine Reihe vorgefertigter CRDTs beinhalten wie zum Beispiel automerge\footnote{\url{https://github.com/automerge/automerge}}, yjs\footnote{\url{https://github.com/yjs/yjs}} oder js-delta-crdts\footnote{\url{https://github.com/peer-base/js-delta-crdts}}. 
 
-Die Wahl, das CRDT operation-based statt state-based umzusetzen, ist jedoch in Frage zu stellen. Die initiale Motivation, so ließe sich die Nutzlast der HTTP-Requests und Responses verringern, hat sich nicht bewahrheitet. Zwar ist es möglich, immer nur einzelne Operationen an den Server zu schicken, dies wäre jedoch kontraproduktiv. In Client-Server-Modell gibt es keine Garantie, dass der Server jede Operationen erhält, wenn diese nur einmal geschickt werden, wodurch das Verpassen einzelner Operationen möglich wäre. Somit wäre \ac{SEC} nicht mehr gewährleistet. Um dies zu vermeiden werden im Prototypen stets alle Operationen ausgetauscht werden müssen. Somit emuliert das operation-based CRDT ein state-based CRDT. Aus allen lokalen Operationen eines Clients lässt sich schließlich der ganze Zustand der Anwendung zusammensetzen. Dies ist äquivalent zu dem Halbverband, aus welchem ein state-based CRDT besteht. Im Prototypen bilden die Operationen die Elemente des Halbverbandes, wobei die obere Schranke jeweils aus den Operationen mit dem neuesten Datum für jeden Wert des Zustands besteht.
+Ein weiterer Vorteil, den Entwickler/innen bei der Umsetzung einer eigenen CRDT-basierten Datenstruktur haben, ist die Unabhängigkeit von Datenbank-Technologien. Eine Implementierung, wie sie im Prototypen erfolgt ist, kann problemlos mit dem lokalen Speichern der IndexedDB-API und einer beliebigen Server-Datenbank erfolgen. Im Gegensatz zur Verwendung spezieller Datenbanken oder \ac{BaaS} Anbietern, welche Funktionen zum Synchronisieren von Daten bereitstellen, ist ein selbst implementiertes CRDT unabhängig von Funktionalitäten, die an bestimmte Datenbanken geknüpft sind. Die Lösung durch die Nutzung von CRDTs erfordert jedoch einen nicht unerheblichen Planungsaufwand und könnte bei komplexen Datenstrukturen schwierig sein. Entwickler müssen hier also abwiegen, ob sie eine \enquote{out of the box} Lösung bevorzugen, welche sie an bestimmte Datenbanken bindet, oder mit CRDTs eine feinabstimmbare Variante bevorzugen, die jedoch nicht ohne Aufwand umzusetzen ist. 
+
+Die Wahl, das CRDT operation-based statt state-based umzusetzen, ist jedoch in Frage zu stellen. Die initiale Motivation, so ließe sich die Nutzlast der HTTP-Requests und Responses verringern, hat sich nicht bewahrheitet. Zwar ist es möglich, immer nur einzelne Operationen an den Server zu schicken, dies wäre jedoch kontraproduktiv. Im Client-Server-Modell gibt es keine Garantie, dass der Server sämtliche Operationen erhält, wenn diese jeweils nur einmal geschickt werden. Dadurch wäre das Verpassen einzelner Operationen möglich und \ac{SEC} wäre nicht mehr gewährleistet. Um dies zu vermeiden, müssen im Prototypen stets alle Operationen ausgetauscht werden. Somit emuliert das operation-based CRDT im Gegensatz zur initialen Motivation ein state-based CRDT. Aus allen lokalen Operationen eines Clients lässt sich schließlich der ganze Zustand der Anwendung zusammensetzen. Dies ist äquivalent zu dem Halbverband, aus welchem ein state-based CRDT besteht. Im Prototypen bilden die Operationen die Elemente des Halbverbandes, wobei die obere Schranke jeweils aus den Operationen mit dem neuesten Datum für jeden Wert des Zustands besteht.
 
 \section{Ausblick}
 
-Während die Hauptanwendungsfelder von CRDTs mit Sicherheit weiterhin in den Themengebieten großer verteilter Systeme und kollaborativem Editieren bleiben werden, sind sie doch auch für den Gebrauch in Webanwendungen von Nutzen. Die Garantie, dass Offline- und Online-Daten automatisch synchronisieren ist gerade im Bereich der Offline-First Anwendungen viel Wert, da diese sonst auf bestimmte Technologien zurückgreifen müssen.
+Während die Hauptanwendungsfelder von CRDTs mit Sicherheit weiterhin in den Themengebieten großer verteilter Systeme und kollaborativem Editieren bleiben werden, sind sie doch auch für den Gebrauch in Webanwendungen von Nutzen. Die Garantie, dass Offline- und Online-Daten automatisch synchronisieren, ist gerade im Bereich der Offline-First Anwendungen viel Wert, da diese sonst auf bestimmte Technologien zurückgreifen müssen.
 
-Es bleibt abzuwarten wie sich Offline-First Applikationen in der Zukunft entwickeln. PWAs mitsamt Offline Funktionalität sind zwar im Web Allgegenwärtig sind und werden auch von Web-Giganten wie Twitter, Facebook und Instagram angeboten. Wahre Offline-First Apps jedoch, welche Offline komplett nutzbar sind, haben den großen kommerziellen Durchbruch noch nicht erlebt. In Ländern und Gebieten hingegen, in denen eine schlechte Internetverbindung keine Ausnahme sondern der Standard ist, wird der Bedarf nach Lösungen welche auf die lokale Nutzung ausgelegt sind jedoch stets vorhanden sein. In diesen Ländern sind Offline-First Anwendungen eine Chance für systemrelevante Bereiche, wie Gesundheitswesen und Landwirtschaft, die Probleme der schlechten Netzabdeckung zu überbrücken. Somit sollte auch der Einsatz von CRDTs in Offline-First Anwendungen weiter evaluiert und Optimiert werden, selbst wenn diese sich nicht als nächster großer Trend entpuppen. 
+Es bleibt abzuwarten wie sich Offline-First Applikationen in der Zukunft entwickeln. PWAs mitsamt Offlinefunktionalität sind zwar im Web allgegenwärtig und werden auch von Web-Giganten wie Twitter, Facebook und Instagram angeboten. Wahre Offline-First Apps jedoch, welche offline komplett nutzbar sind, haben den großen kommerziellen Durchbruch noch nicht erlebt. In Ländern und Gebieten hingegen, in denen eine schlechte Internetverbindung keine Ausnahme, sondern der Standard ist, wird der Bedarf nach Lösungen, welche auf die lokale Nutzung ausgelegt sind, stets vorhanden sein. In diesen Ländern sind Offline-First Anwendungen eine Chance für systemrelevante Bereiche, wie Gesundheitswesen und Landwirtschaft, die Probleme der schlechten Netzabdeckung zu überbrücken. Somit sollte auch der Einsatz von CRDTs in Offline-First Anwendungen weiter evaluiert und optimiert werden, selbst wenn diese sich nicht als nächster großer Trend entpuppen. 
 
-Webentwicklern und Webentwicklerinnen, welche sich mit dem Thema auseinandersetzen wollen, mangelt es dazu nicht an Resourcen. Durch die Jahrzehnte lange Forschung an verteilten Systemen und dem umfangreichen Forschungsstand der zu Entwicklung und Validierung von CRDTs besteht, steht genug Material zur Verfügung. Für die Zukunft gilt es, diese Erkenntnisse auf die Welt des Modernen Webs zu übertragen. Beispiele wie Automerge, ein umfangreiches JSON-ähnliches CRDT, zeigen, dass auch die Entwicklung spezieller CRDTs für das Web möglich und sinnvoll ist. 
+Webentwicklern und Webentwicklerinnen, die sich mit dem Thema auseinandersetzen wollen, mangelt es dazu nicht an Ressourcen. Durch die jahrzehntelange Forschung an verteilten Systemen und den umfangreichen Forschungsstand, der zu Entwicklung und Validierung von CRDTs besteht, steht genug Material zur Verfügung. Für die Zukunft gilt es, diese Erkenntnisse auf die Welt des modernen Webs zu übertragen. Beispiele wie automerge und yjs, zeigen, dass auch die Entwicklung spezieller CRDTs für das Web möglich und sinnvoll ist. 
 
-Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem Muster eines state-based CRDT umzusetzen. So könnte verglichen werden, wie diese sich in der Umsetzung und Anwendung unterscheiden. Für den Einsatz von operation-based CRDTs wäre die Nutzung einer Herangehensweise spannend, welche dafür sorgt, dass nicht alle Operationen an den Server gesendet werden müssen. Eine Technologie die dies verspricht ist zum Beispiel das $\delta$-CRDT Framework \autocite{articleDeltaCRDT}.Auch eine Kompromisslösung wäre vorstellbar, in welcher Operationen regelmäßig einzeln ausgetauscht werden, das Synchronisieren mit allen Operationen aber dennoch in regelmäßigem Abstand durchgeführt werden würde. Somit könnten Fehlerfälle korrigiert werden, und die Nutzlast des regelmäßigem Austausches wäre minimiert.
+Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem Muster eines state-based CRDT umzusetzen. So könnte verglichen werden, wie beide Varianten sich in der Umsetzung und Anwendung unterscheiden. Für den Einsatz von operation-based CRDTs wäre die Nutzung einer Herangehensweise spannend, welche dafür sorgt, dass nicht alle Operationen an den Server gesendet werden müssen. Eine Technologie, die dies verspricht, ist zum Beispiel das $\delta$-CRDT Framework \autocite{articleDeltaCRDT}. Auch eine Kompromisslösung wäre vorstellbar, in welcher Operationen regelmäßig einzeln ausgetauscht werden, das Synchronisieren mit allen Operationen aber dennoch in größerem Abstand durchgeführt werden würde. Somit könnten verpasste Operationen korrigiert werden, und die Nutzlast des regelmäßigem Austausches wäre minimiert.
 
 
 
@@ -1005,15 +1008,15 @@ Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem M
 \newpage
 \lstlistoflistings
 \newpage
-\printbibliography[title ={Literaturquellen}, filter=literatur]
+\printbibliography[title ={Literaturquellen}, filter=literatur, sorting=nty]
 \printbibliography[type=online, title ={Onlinequellen}]
 \printbibliography[filter=other, title = {Weitere Quellen}]
 \newpage
 \section*{Anhang zum Prototypen}
-\subsection*{Wo finde Ich den Prototypen?}
+\subsection*{Wo finde ich den Prototypen?}
 Der Code des Prototypen befindet sich in den folgenden öffentlichen GitHub repositories:
 
-Client: https://github.com/llendo/crdt-app\\
+Client: \url{https://github.com/llendo/crdt-app}\\
 Server: https://github.com/llendo/crdt-app-server
 
 
@@ -1028,10 +1031,10 @@ https://crdt-app-server.herokuapp.com/
 
 Sowohl Client als auch Server sind in der gehosteten Version auf dem gleichen Stand wie die GitHub repositories. 
 
-\subsection*{Wie setzte Ich den Prototypen lokal auf?}
+\subsection*{Wie setzte ich den Prototypen lokal auf?}
 
 \subsubsection*{Client}
-Der Client lässt sich einfach über das Aufrufen der index.html über einen lokalen Webserver starten. Wenn ein lokaler Server zum Synchronisieren genutzt werden soll, muss die URL in der Funktion \textit{sync} in der Datei crdt.js, durch die des lokalen Servers ersetzt werden.
+Der Client lässt sich einfach über das Aufrufen der index.html über einen lokalen Webserver starten. Wenn ein lokaler Server zum Synchronisieren genutzt werden soll, muss die URL in der Funktion \textit{sync} in der Datei crdt.js durch die des lokalen Servers ersetzt werden.
 
 \subsubsection*{Server}
 Zum lokalen Starten des Servers wird node.js benötigt (https://nodejs.org/). \\
