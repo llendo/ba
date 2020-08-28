@@ -23,6 +23,7 @@
 \usepackage{chngcntr}
 \usepackage{jslistings}
 \usepackage{helvet}
+\usepackage{abstract}
 
 \AtBeginDocument{\counterwithout{lstlisting}{chapter}}
 \AtBeginDocument{\counterwithout{footnote}{chapter}}
@@ -52,10 +53,7 @@ natbib=true
 \usepackage{enumitem}
 
 \defbibfilter{literatur}{%
-	\type{book} \or \type{article} \or \type{inproceedings} \or \type{phdthesis}
-}
-\defbibfilter{other}{%
-	\not \( \type{book} \or \type{article} \or \type{inproceedings} \or \type{phdthesis} \or \type{online}\)
+	\type{book} \or \type{article} \or \type{inproceedings} \or \type{phdthesis} \or \type{thesis}
 }
 
 \setlist[enumerate]{label*=\arabic*.}
@@ -117,11 +115,17 @@ natbib=true
 \end{tabular} 
 \end{titlepage}
 \newpage
-\section*{Zusammenfassung}
-Die Arbeit \enquote{\inserttitle} behandelt die Konzeption und Umsetzung einer Offline-First-Webanwendung mit einer Datenstruktur auf Basis von konfliktfreien replizierten Datentypen (CRDTs). Zuerst werden die Grundlagen vom Offline-First-Prinzip und CRDTs erkundet. Dabei wird untersucht, wie und warum der Einsatz von CRDTs in Offline-First-Applikationen hilfreich sein kann, denn die Themen stehen nicht zwangsläufig in Verbindung. Anschließend wird eine Webanwendung, welche auch offline vollständig nutzbar ist, als Prototyp konzipiert und umgesetzt. Die Datenstruktur wird mithilfe von CRDTs so implementiert, dass ein konfliktfreies Synchronisieren von Daten mit einem Server möglich ist, auch wenn Änderungen offline erfolgt sind. Nach der Fertigstellung des Prototypen folgt eine Evaluation der entwickelten Anwendung und ihrer Funktionalitäten. Abgeschlossen wird die Arbeit mit dem Fazit, in welchem zusammengefasst wird, welche Erkenntnisse über den Einsatz von CRDTs in Offline-First-Anwendungen gewonnen werden konnten.
+%\section*{Zusammenfassung}
+\begin{abstract}
+\singlespacing
+Die Arbeit \enquote{\inserttitle} behandelt die Konzeption und Umsetzung einer Offline-First-Webanwendung mit einer Datenstruktur auf Basis von konfliktfreien replizierten Datentypen (CRDTs). Zuerst werden die Grundlagen vom Offline-First-Prinzip und CRDTs erkundet. Dabei wird untersucht, wie und warum der Einsatz von CRDTs in Offline-First-Applikationen hilfreich sein kann, denn die Themen stehen nicht zwangsläufig in Verbindung. Anschließend wird eine Webanwendung, welche auch offline vollständig nutzbar ist, konzipiert und umgesetzt. Die Datenstruktur wird mithilfe von CRDTs so implementiert, dass ein konfliktfreies Synchronisieren von Daten mit einem Server möglich ist, auch wenn Änderungen offline erfolgt sind. Nach der Fertigstellung des Prototypen folgt eine Evaluation der entwickelten Anwendung und ihrer Funktionalitäten. Abgeschlossen wird die Arbeit mit dem Fazit, dass der Einsatz von CRDTs sich auszahlen kann, wenn Entwickler/innen bereit sind, Zeit für ein durchdachtes Konzept in die Hand zu nehmen. Alternative Lösungen bieten nicht den gleichen Grad an Freiheit bei der Auswahl an Technologien und der Feinsteuerung von Funktionalitäten, sind dafür jedoch weniger aufwendig in der Umsetzung. 
+\\
+\\
+\\
+The bachelor's thesis \enquote{Data Synchronization In an Offline-First Web Application Using CRDTs} discusses the design and implementation of an offline-first web application with a data structure based on conflict-free replicated data types(CRDTs). First, the basics of the Offline-First principle and CRDTs are explored. Because the topics are not necessarily related, it is investigated how and why the use of CRDTs in offline-first applications can be helpful. Subsequently, a web application, which is fully usable offline, is designed and implemented. With the help of CRDTs, the data structure is implemented to allow conflict-free synchronization of it's data with a server, even if changes have been made offline. After completion of the prototype an evaluation of the developed application and its functionalities is conducted. The thesis ends with a summary of the knowledge gained on the use of CRDTs in Offline-First applications. It is concluded that the use of CRDTs can pay off if developers are willing to take the time to devise a well thought-out concept. Alternative solutions do not offer the same degree of freedom in the selection of technologies and fine control of functionalities, but are easier to implement. 
 
-\section*{Abstract}
-The bachelor's thesis \enquote{Data Synchronization In an Offline-First Web Application Using CRDTs} discusses the design and implementation of an offline-first web application with a data structure based on conflict-free replicated data types(CRDTs). First, the basics of the Offline-First principle and CRDTs are explored. Because the topics are not necessarily related, it is investigated how and why the use of CRDTs in offline-first applications can be helpful. Subsequently, a web application, which is fully usable offline, is designed and implemented as a prototype. With the help of CRDTs, the data structure is implemented to allow conflict-free synchronization of it's data with a server, even if changes have been made offline. After completion of the prototype an evaluation of the developed application and its functionalities is conducted. The thesis is concluded with a summary of the knowledge gained on the use of CRDTs in Offline-First applications.
+\end{abstract}
+
 \newpage
 
 \pagestyle{fancy}
@@ -133,8 +137,8 @@ The bachelor's thesis \enquote{Data Synchronization In an Offline-First Web Appl
 \newpage
 \section*{Abkürzungsverzeichnis}
 	\begin{acronym}[Bash]
-		\acro{CRDT}{Conflict-free replicated data type}
-		\acrodefplural{CRDT}{Conflict-free replicated data types}
+		\acro{CRDT}{Conflict-free Replicated Data Type}
+		\acrodefplural{CRDT}{Conflict-free Replicated Data Types}
 		\acro{PWA}{Progressive Web-App}
 		\acrodefplural{PWA}{Progressive Web-Apps}
 		\acro{SC}{Strong Consistency}
@@ -908,7 +912,7 @@ Nach dem Speichern der eingehenden Operationen werden die lokalen Operationen de
 
 \section{Löschen überflüssiger Operationen}
 
-Durch das ständige Hinzufügen von Operationen droht die Kommunikation zwischen Client und Server auf Dauer immer langsamer zu werden. Um dies zu verhindern, sind sowohl im Client als auch im Server Maßnahmen zur Reduzierung der Menge an Operationen implementiert.
+Durch das ständige Hinzufügen von Operationen droht die Nutzlast zwischen Client und Server auf Dauer immer weiter anzusteigen. Um diesen Anstieg zu mindern, sind sowohl im Client als auch im Server Maßnahmen zur Reduzierung der Menge an Operationen implementiert. Diese Maßnahmen für die Funktionalität des Prototypen optional und stellen lediglich eine kleine Optimierung dar. 
 
 Kommt es beim Verarbeiten der Operationen vor, dass zwei Operationen dieselbe Kombination aus ObjectStore, Objekt, Schlüssel und Wert haben, setzt sich immer die aktuellere der beiden Operationen durch. In der Implementierung des Prototypen wird sich die ältere Operation nie gegen die aktuelle durchsetzen, was bedeutet, dass die ältere Operation irrelevant ist. Deshalb wird die alte Operation diesem Fall gelöscht. 
 
@@ -1010,7 +1014,6 @@ Für den Prototypen wäre es interessant, das entwickelte CRDT erneut nach dem M
 \newpage
 \printbibliography[title ={Literaturquellen}, filter=literatur, sorting=nty]
 \printbibliography[type=online, title ={Onlinequellen}]
-\printbibliography[filter=other, title = {Weitere Quellen}]
 \newpage
 \section*{Anhang zum Prototypen}
 \subsection*{Wo finde ich den Prototypen?}
@@ -1032,9 +1035,10 @@ https://crdt-app-server.herokuapp.com/
 Sowohl Client als auch Server sind in der gehosteten Version auf dem gleichen Stand wie die GitHub repositories. 
 
 \subsection*{Wie setzte ich den Prototypen lokal auf?}
-
+Die jeweiligen Anleitungen befinden sich auch in den GitHub repositories.
 \subsubsection*{Client}
 Der Client lässt sich einfach über das Aufrufen der index.html über einen lokalen Webserver starten. Wenn ein lokaler Server zum Synchronisieren genutzt werden soll, muss die URL in der Funktion \textit{sync} in der Datei crdt.js durch die des lokalen Servers ersetzt werden.
+\thispagestyle{empty}
 
 \subsubsection*{Server}
 Zum lokalen Starten des Servers wird node.js benötigt (https://nodejs.org/). \\
